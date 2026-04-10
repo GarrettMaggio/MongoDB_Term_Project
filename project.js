@@ -1,7 +1,7 @@
 
 const {MongoClient} = require("mongodb");
 
-const uri = "mongodb+srv://gmaggio:Redfishing12@cluster1.4veezmn.mongodb.net/?appName=Cluster1";
+const uri = "mongodb+srv://<username>:<password>@cluster1.4veezmn.mongodb.net/?appName=Cluster1";
 
 const express = require("express");
 const app = express();
