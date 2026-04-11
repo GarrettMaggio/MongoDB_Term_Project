@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+    <body>
+        <h3>Proect Mongo Database</h3>
+        <h6>Use at your own risk</h6>
+
+        <p>HTML links to different database pages</p>
+
+        <form id = "loginForm" onsubmit="login()">
+            <input type="text" id="username" name="username" placeholder="Username">
+            <input type="password" id="password" name="password" placeholder="Password">
+            <input type="submit" value="Login">
+        </form>
+
+        <form id="form" onsubmit='defaultRoute()'>
+        <input type="submit" value="Default Route">
+        <button onclick="displayName()">Get UserName</button>
+        <button onclick="displayTopic()">Get Topic</button>
+        </form>
+
+        <div id="content"></div>
+
+        <script>
+            // the response code comes from the official documentation for the fetch api https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+            async function login() {
+                const userName = document.getElementById("username").value;
+                const passWord = document.getElmentById("password").value;
+                // send the username and password to the server to be authenticated.
+                // the response from the server should be a json object that contains a message and a status code. The message should be displayed on the html page and the status code should be used to determine if the login was successful or not.
+                postData = {
+                    username: userName,
+                    password: passWord,
+                }
+                const url = "http://localhost:3000/login";
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(postData),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Response status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    console.log(result);
+                    document.getElementById("context").innerHTML = `<p>${JSON.stringify(result)}</p>`;
+                
+                }
+                catch (error) {
+                    console.error(error.message);
+                }
+            }
+            // the response code comes from the official documentation for the fetch api https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+            /*async function defaultRoute() {
+                const url = "http://localhost:3000/";
+            
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Response status: ${response.status}`);
+                    }
+                
+                const result = await response.json();
+                console.log(result);
+                // display the result in the html page
+                document.getElementById("context").innerHTML = `<p>${JSON.stringify(result)}</p>`;
+                } catch (error) {
+                    console.error(error.message); 
+                }
+            }
+            */
+            async function displayName() {
+                const url = "http://localhost:3000/say/name";
+                
+                try {
+                    const response  = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Response status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    console.log(result);
+                    document.getElementById("context").innerHTML = `<p>${JSON.stringify(result)}</p>`;
+
+                } catch (error) {
+                    console.error(error.message);
+                }
+            }
+            async function displayTopic() { 
+                const url = "http://localhost:3000/api/mongo/topic";
+
+                try { 
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Response status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    console.log(result);
+                    document.getElementById("context").innerHTML = `<p>${JSON.stringify(result)}</p>`;
+
+                } catch (error) {
+                    console.error(error.message);
+                }
+            }
+        </script>
+
+    </body>
+
+</html>
