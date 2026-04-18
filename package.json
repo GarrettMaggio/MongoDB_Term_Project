@@ -1,4 +1,12 @@
 {
+  "name": "mongodb-term-project",
+  "version": "1.0.0",
+  "description": "Topic board MVC app with mock-backed backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
   "dependencies": {
     "mongodb": "^7.1.1"
   }
