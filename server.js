@@ -7,6 +7,7 @@ const topicSubject = require('./services/observers/topicSubject');
 const ActivityObserver = require('./services/observers/activityObserver');
 const StatsObserver = require('./services/observers/statsObserver');
 
+
 topicSubject.attach(new ActivityObserver());
 topicSubject.attach(new StatsObserver());
 
@@ -97,3 +98,4 @@ const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
+

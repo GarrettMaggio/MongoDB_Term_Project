@@ -1,4 +1,6 @@
-const mockData = {
+
+
+/*const mockData = {
   users: [
     { id: 'u1', username: 'demo', password: 'demo123', displayName: 'Demo Player' },
     { id: 'u2', username: 'luna', password: 'moon123', displayName: 'Luna Arc' },
@@ -50,3 +52,4 @@ const mockData = {
 };
 
 module.exports = mockData;
+*/

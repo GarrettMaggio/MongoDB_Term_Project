@@ -5,12 +5,12 @@ const postModel = require('../models/postModel');
 const db = require('../config/databaseSingleton').getInstance();
 const { landingView, dashboardView } = require('../views/pages');
 
-function landing(req, res) {
-  const trending = topicModel.getTrending(6);
+async function landing(req, res) {
+  const trending = await topicModel.getTrending(6);
   res.html(landingView({ trending }));
 }
 
-function dashboard(req, res) {
+async function dashboard(req, res) {
   const user = userModel.findById(req.session.userId);
   const subscribedIds = subscriptionModel.listTopicIdsByUser(user.id);
   const recents = postModel.getRecentByTopics(subscribedIds, 2);

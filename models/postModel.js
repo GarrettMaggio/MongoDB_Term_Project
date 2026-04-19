@@ -1,18 +1,22 @@
-const DatabaseSingleton = require('../config/databaseSingleton');
+//const DatabaseSingleton = require('../config/databaseSingleton');
+const DataContext = require('../data/datacontext');
+
 
 class PostModel {
-  constructor() {
-    this.db = DatabaseSingleton.getInstance();
+
+  getPosts() {
+    const posts = DataContext.GetPosts();
+    return posts;
   }
 
   listByTopic(topicId) {
-    return this.db.getCollection('posts')
+    return this.getPosts()
       .filter((post) => post.topicId === topicId)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
   create({ topicId, userId, content }) {
-    const posts = this.db.getCollection('posts');
+    const posts = this.getPosts();
     const post = {
       id: `p${posts.length + 1}`,
       topicId,
@@ -25,7 +29,7 @@ class PostModel {
   }
 
   getRecentByTopics(topicIds, limitPerTopic = 2) {
-    const allPosts = this.db.getCollection('posts');
+    const allPosts = this.getPosts();
     return topicIds.map((topicId) => ({
       topicId,
       posts: allPosts

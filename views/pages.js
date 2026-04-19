@@ -2,10 +2,12 @@ const { renderLayout } = require('./layout');
 
 const fmt = (iso) => new Date(iso).toLocaleString();
 
-function landingView({ trending }) {
-  const trendCards = trending.map((topic) => `
+function landingView({ trending = [] }) {
+  
+  const safeTrending = Array.isArray(trending) ? trending : [];
+  const trendCards = safeTrending.map((topic) => `
     <article class="panel topic-card">
-      <div class="topic-chip">${topic.tags.slice(0, 2).join(' · ') || 'community'}</div>
+      <div class="topic-chip">${(topic.tags || []).slice(0, 2).join(' · ') || 'community'}</div>
       <h3>${topic.name}</h3>
       <p>${topic.description}</p>
       <div class="card-meta"><span>${topic.accessCount} visits</span><a href="/auth/login" class="text-link">View Topic</a></div>
@@ -55,7 +57,7 @@ function authView(type, message = '') {
       <article class="panel auth-panel">
         <p class="eyebrow">${isLogin ? 'Welcome Back' : 'Join PulseBoard'}</p>
         <h2>${isLogin ? 'Sign in to your dashboard' : 'Create your account'}</h2>
-        <form method="POST" action="/auth/${type}">
+        <form id="auth-form" method="POST" action="/auth/${type}">
           <label>Username</label>
           <input name="username" placeholder="your_name" required />
           <label>Password</label>
@@ -65,7 +67,7 @@ function authView(type, message = '') {
         <p class="muted">${isLogin ? 'Need an account?' : 'Already have an account?'} <a class="text-link" href="/auth/${isLogin ? 'register' : 'login'}">${isLogin ? 'Register' : 'Login'}</a></p>
       </article>
     </section>`
-  });
+  }); 
 }
 
 function dashboardView({ user, subscribedSummaries, trending, activity, subscribedTopics }) {

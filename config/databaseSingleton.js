@@ -1,16 +1,23 @@
-const mockData = require('../data/mockData');
+require('dotenv').config({path: './config/mongo.env'});
+//const datacontext = require('../data/datacontext');
+const {MongoClient} = require("mongodb");
+const client = new MongoClient(process.env.MONGO_URI);
+
+
 
 class DatabaseSingleton {
   static instance;
-
-  constructor() {
-    this.mode = 'mock';
-    this.data = JSON.parse(JSON.stringify(mockData));
+  
+  static async createInstance() {
+    await client.connect();
+    const database = client.db('ProjectDataBase');
+    DatabaseSingleton.instance = database;
+    return DatabaseSingleton.instance;
   }
 
-  static getInstance() {
+  static async getInstance() {
     if (!DatabaseSingleton.instance) {
-      DatabaseSingleton.instance = new DatabaseSingleton();
+      DatabaseSingleton.instance = await DatabaseSingleton.createInstance();
     }
     return DatabaseSingleton.instance;
   }
@@ -21,6 +28,7 @@ class DatabaseSingleton {
     }
     return this.data[name];
   }
+  
 }
 
 module.exports = DatabaseSingleton;

@@ -1,12 +1,14 @@
-const DatabaseSingleton = require('../config/databaseSingleton');
+//const DatabaseSingleton = require('../config/databaseSingleton');
+const DataContext = require('../data/datacontext');
 
 class SubscriptionModel {
-  constructor() {
-    this.db = DatabaseSingleton.getInstance();
+  getSubscriptions() {
+    const subscriptions = DataContext.GetSubscriptions();
+    return subscriptions;
   }
 
   listByUser(userId) {
-    return this.db.getCollection('subscriptions').filter((s) => s.userId === userId);
+    return this.getSubscriptions().filter((s) => s.userId === userId);
   }
 
   listTopicIdsByUser(userId) {
@@ -14,18 +16,18 @@ class SubscriptionModel {
   }
 
   isSubscribed(userId, topicId) {
-    return this.db.getCollection('subscriptions').some((s) => s.userId === userId && s.topicId === topicId);
+    return this.getSubscriptions().some((s) => s.userId === userId && s.topicId === topicId);
   }
 
   subscribe(userId, topicId) {
-    const subscriptions = this.db.getCollection('subscriptions');
+    const subscriptions = this.getSubscriptions();
     if (subscriptions.some((s) => s.userId === userId && s.topicId === topicId)) return false;
     subscriptions.push({ userId, topicId });
     return true;
   }
 
   unsubscribe(userId, topicId) {
-    const subscriptions = this.db.getCollection('subscriptions');
+    const subscriptions = this.getSubscriptions();
     const idx = subscriptions.findIndex((s) => s.userId === userId && s.topicId === topicId);
     if (idx === -1) return false;
     subscriptions.splice(idx, 1);

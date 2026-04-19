@@ -1,34 +1,42 @@
+// userModel is connected to the database.
 const DatabaseSingleton = require('../config/databaseSingleton');
+const DataContext = require('../data/datacontext');
 
 class UserModel {
-  constructor() {
+  /*constructor() {
     this.db = DatabaseSingleton.getInstance();
+  }*/
+
+  async findByCredentials(username, password) {
+    const users = await DataContext.ConnectUser();
+    const user = users.find((u) => u.username === username && u.password === password);
+    if (!user) {
+      console.log('User not found with provided credentials');
+      return null;
+    }
+    return user;
+    //return this.db.getCollection('users').find((u) => u.username === username && u.password === password);
   }
 
-  findByCredentials(username, password) {
-    return this.db.getCollection('users').find((u) => u.username === username && u.password === password);
-  }
-
-  create({ username, password }) {
-    const users = this.db.getCollection('users');
-    if (users.some((u) => u.username === username)) return null;
+  async create({ username, password }) {
+    const users = await DataContext.ConnectUser();
+    if (!users) return null;
     const user = {
-      id: `u${users.length + 1}`,
+      _id: `u${users.length + 1}`,
       username,
       password,
       displayName: username
     };
-    users.push(user);
     return user;
   }
 
-  findById(userId) {
-    return this.db.getCollection('users').find((u) => u.id === userId);
+  async findById(userId) {
+    return await DataContext.ConnectUser().find('users').find((u) => u._id === userId);
   }
 
   toPublic(userId) {
     const user = this.findById(userId);
-    return user ? { id: user.id, username: user.username, displayName: user.displayName } : null;
+    return user ? { id: user._id, username: user.username, displayName: user.displayName } : null;
   }
 
   displayNameFor(userId) {

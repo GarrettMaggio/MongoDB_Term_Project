@@ -1,13 +1,22 @@
 const topicModel = require('../models/topicModel');
 const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
-const userModel = require('../models/userModel');
 const { exploreView, myTopicsView, topicView } = require('../views/pages');
+//const { landingView } = require('../views/pages');
 
-function explore(req, res) {
+
+/*async function landing(req, res) {
+  const trending = await topicModel.getTrending(6);
+  console.log("TRENDING =", trending);
+  console.log("IS ARRAY =", Array.isArray(trending));
+  console.log("TYPE =", typeof trending);
+  res.html(landingView({ trending }));  
+}*/
+
+async function explore(req, res) {
   const user = userModel.findById(req.session.userId);
   const query = req.query.q || '';
-  const topics = topicModel.search(query);
+  const topics = await topicModel.search(query);
   const subscribedTopicIds = subscriptionModel.listTopicIdsByUser(user.id);
   res.html(exploreView({ user, topics, subscribedTopicIds, query }));
 }

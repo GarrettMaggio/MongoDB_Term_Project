@@ -1,30 +1,44 @@
-const DatabaseSingleton = require('../config/databaseSingleton');
+//const DatabaseSingleton = require('../config/databaseSingleton');
+const { db } = require('./userModel');
+const DataContext = require('../data/datacontext');
 
 class TopicModel {
-  constructor() {
-    this.db = DatabaseSingleton.getInstance();
+
+  async getallTopics() {
+    const topics = await DataContext.GetTopics();
+    return topics;
+  }
+  async getallStats() {
+    const stats = await DataContext.GetStats();
+    return stats;
   }
 
-  getAll() {
-    return this.db.getCollection('topics');
+  async findById(topicId) {
+    const topics = await this.getallTopics();
+    return topics.find((topic) => topic.id === topicId);
   }
 
-  findById(topicId) {
-    return this.getAll().find((topic) => topic.id === topicId);
-  }
-
-  search(query = '') {
+  async search(query = '') {
+    const topics = await this.getallTopics();
     const term = query.trim().toLowerCase();
-    if (!term) return this.getAll();
-    return this.getAll().filter((topic) => (
+    if (!term) return topics;
+    return topics.filter((topic) => (
       topic.name.toLowerCase().includes(term)
       || topic.description.toLowerCase().includes(term)
       || topic.tags.some((tag) => tag.toLowerCase().includes(term))
     ));
   }
 
-  getTrending(limit = 6) {
-    return [...this.getAll()].sort((a, b) => b.accessCount - a.accessCount).slice(0, limit);
+  async getTrending(limit = 6) {
+    const topics = await this.getallTopics();
+
+    if (!Array.isArray(topics)) {
+      return [];
+    }
+
+    return topics
+    .sort((a, b) => b.accessCount - a.accessCount)
+    .slice(0, limit);
   }
 
   incrementAccess(topicId) {
@@ -33,8 +47,8 @@ class TopicModel {
     return topic;
   }
 
-  create({ name, description, tags, createdBy }) {
-    const topics = this.getAll();
+  async create({ name, description, tags, createdBy }) {
+    const topics = await this.getallTopics();
     const topic = {
       id: `t${topics.length + 1}`,
       name,
@@ -44,7 +58,7 @@ class TopicModel {
       accessCount: 0
     };
     topics.push(topic);
-    this.db.getCollection('topicStats').push({ topicId: topic.id, totalPosts: 0, lastPostAt: null });
+    //this.getallStats().push({ topicId: topic.id, totalPosts: 0, lastPostAt: null });
     return topic;
   }
 }
