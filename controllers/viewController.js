@@ -1,10 +1,10 @@
 const topicModel = require('../models/topicModel');
 const userModel = require('../models/userModel');
+const activityModel = require('../models/activityModel')
 const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const db = require('../config/databaseSingleton').getInstance();
 const { landingView, dashboardView } = require('../views/pages');
-const DataContext = require('../data/datacontext');
 
 async function landing(req, res) {
   const trending = await topicModel.getTrending(6);
@@ -30,11 +30,18 @@ async function dashboard(req, res) {
 
     // Fix this first thing after morning class
 
-  const activity = await DataContext.GetActivityLog().then((logs) => logs.map((entry) => ({
+    const activity = await activityModel.getActivityLog().then((logs) => logs.map((entry) => ({
+      ...entry,
+      userName: userModel.displayNameFor(entry.userId),
+      topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
+    })));
+
+  /*const activity = await DataContext.GetActivityLog().then((logs) => logs.map((entry) => ({
     ...entry,
     userName: userModel.displayNameFor(entry.userId),
     topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
-  })));
+  })));*/
+
 
   res.html(dashboardView({
     user,

@@ -84,7 +84,7 @@ class DataContext {
 
     static async GetActivityLog() {
         const db = await getDatabase();
-        return db.collection('ActivityLog').find({}).sort({ timestamp: -1}).toArray();
+        return db.collection('ActivityLog').find({}).toArray();
     }
     
 }
