@@ -1,11 +1,6 @@
-// userModel is connected to the database.
-const DatabaseSingleton = require('../config/databaseSingleton');
 const DataContext = require('../data/datacontext');
 
 class UserModel {
-  /*constructor() {
-    this.db = DatabaseSingleton.getInstance();
-  }*/
 
   async findByCredentials(username, password) {
     const users = await DataContext.ConnectUser();
@@ -18,11 +13,11 @@ class UserModel {
     //return this.db.getCollection('users').find((u) => u.username === username && u.password === password);
   }
 
-  async create({ username, password }) {
-    const users = await DataContext.ConnectUser();
-    if (!users) return null;
+  async create({ username, password, displayName }) {
+    const usersId = await DataContext.CreateUser(username, password, displayName);
+    if (!usersId) return null;
     const user = {
-      _id: `u${users.length + 1}`,
+      _id: usersId,
       username,
       password,
       displayName: username
@@ -31,7 +26,7 @@ class UserModel {
   }
 
   async findById(userId) {
-    return await DataContext.ConnectUser().find('users').find((u) => u._id === userId);
+    return await DataContext.FindUserById(userId);
   }
 
   toPublic(userId) {

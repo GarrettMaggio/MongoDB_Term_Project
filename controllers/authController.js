@@ -23,9 +23,12 @@ async function login(req, res) {
 async function register(req, res) {
   const username = (req.body.username || '').trim();
   const password = (req.body.password || '').trim();
+  const displayName = username;
   if (!username || !password) return res.redirect('/auth/register?msg=All%20fields%20are%20required');
 
-  const user = await userModel.create({ username, password });
+  const user = await userModel.create({ username, password, displayName });
+  console.log(user._id);
+  console.log('Created user:', user.username, 'Password:', user.password, 'DisplayName:', user.displayName);
   if (!user) return res.redirect('/auth/register?msg=Username%20already%20exists');
   req.session.userId = user._id;
   return res.redirect('/dashboard');

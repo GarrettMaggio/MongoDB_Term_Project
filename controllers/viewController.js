@@ -11,8 +11,13 @@ async function landing(req, res) {
 }
 
 async function dashboard(req, res) {
-  const user = userModel.findById(req.session.userId);
-  const subscribedIds = subscriptionModel.listTopicIdsByUser(user.id);
+  const user = await userModel.findById(req.session.userId);
+  
+  if (!user) {
+    return res.redirect('/auth/login?msg=Please%20log%20in%20to%20access%20the%20dashboard');
+  }
+
+  const subscribedIds = subscriptionModel.listTopicIdsByUser(user._id);
   const recents = postModel.getRecentByTopics(subscribedIds, 2);
   const subscribedSummaries = recents
     .map((r) => ({ topic: topicModel.findById(r.topicId), posts: r.posts }))
