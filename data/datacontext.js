@@ -81,6 +81,11 @@ class DataContext {
             ...post
         }
     }
+
+    static async GetActivityLog() {
+        const db = await getDatabase();
+        return db.collection('ActivityLog').find({}).sort({ timestamp: -1}).toArray();
+    }
     
 }
 module.exports = DataContext;

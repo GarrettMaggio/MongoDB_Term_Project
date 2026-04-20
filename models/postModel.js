@@ -1,6 +1,5 @@
 const DataContext = require('../data/datacontext');
 
-
 class PostModel {
 
   async getPosts() {

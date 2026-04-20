@@ -4,6 +4,7 @@ const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const db = require('../config/databaseSingleton').getInstance();
 const { landingView, dashboardView } = require('../views/pages');
+const DataContext = require('../data/datacontext');
 
 async function landing(req, res) {
   const trending = await topicModel.getTrending(6);
@@ -17,9 +18,9 @@ async function dashboard(req, res) {
     return res.redirect('/auth/login?msg=Please%20log%20in%20to%20access%20the%20dashboard');
   }
 
-  const subscribedIds = subscriptionModel.listTopicIdsByUser(user._id);
-  const recents = postModel.getRecentByTopics(subscribedIds, 2);
-  const subscribedSummaries = recents
+  const subscribedIds = await subscriptionModel.listTopicIdsByUser(user._id);
+  const recents = await postModel.getRecentByTopics(subscribedIds, 2);
+  const subscribedSummaries = await recents
     .map((r) => ({ topic: topicModel.findById(r.topicId), posts: r.posts }))
     .filter((r) => r.topic)
     .map((r) => ({
@@ -27,17 +28,19 @@ async function dashboard(req, res) {
       posts: r.posts.map((p) => ({ ...p, userName: userModel.displayNameFor(p.userId) }))
     }));
 
-  const activity = db.getCollection('activityLog').slice(0, 8).map((entry) => ({
+    // Fix this first thing after morning class
+
+  const activity = await DataContext.GetActivityLog().then((logs) => logs.map((entry) => ({
     ...entry,
     userName: userModel.displayNameFor(entry.userId),
     topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
-  }));
+  })));
 
   res.html(dashboardView({
     user,
     subscribedSummaries,
-    trending: topicModel.getTrending(5),
     activity,
+    trending: await topicModel.getTrending(5),
     subscribedTopics: subscribedSummaries.map((s) => s.topic)
   }));
 }
