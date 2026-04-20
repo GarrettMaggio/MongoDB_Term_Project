@@ -51,6 +51,11 @@ class DataContext {
         return db.collection('Subscriptions').find({userId}).toArray();
     }
 
+    static async DeleteSubscription(userId, topicId) {
+        const db =  await getDatabase();
+        return await db.collection('Subscriptions').deleteOne({ userId, topicId });
+    }
+
     static async GetStats() {
         const db = await getDatabase();
         return db.collection('Stats').find({}).toArray();
@@ -58,6 +63,11 @@ class DataContext {
     
     static async CreateStat(type, topicId, userId) {
         const db = await getDatabase();
+    }
+
+    static async DeleteStat(type, topicId, userId) {
+        const db = await getDatabase();
+        return await db.collection('Stats').deleteOne({ type, topicId, userId });
     }
 
     static async GetPosts() {
@@ -80,6 +90,11 @@ class DataContext {
             _id: result.insertedId,
             ...post
         }
+    }
+
+    static async DeletePost(postId) {
+        const db = await getDatabase();
+        return await db.collection('Posts').deleteOne({ _id: postId });
     }
 
     static async GetActivityLog() {
