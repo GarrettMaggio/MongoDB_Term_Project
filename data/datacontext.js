@@ -81,6 +81,11 @@ class DataContext {
             ...post
         }
     }
+
+    static async GetActivityLog() {
+        const db = await getDatabase();
+        return db.collection('ActivityLog').find({}).toArray();
+    }
     
 }
 module.exports = DataContext;

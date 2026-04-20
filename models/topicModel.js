@@ -30,8 +30,8 @@ class TopicModel {
   }
 
   async getTrending(limit = 6) {
-    const topics = await this.getallTopics();
-
+    const topics = await DataContext.GetTopics();
+    
     if (!Array.isArray(topics)) {
       return [];
     }

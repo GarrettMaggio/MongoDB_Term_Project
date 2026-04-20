@@ -1,6 +1,5 @@
 const DataContext = require('../data/datacontext');
 
-
 class PostModel {
 
   async getPosts() {
@@ -19,6 +18,8 @@ class PostModel {
     const posts = await DataContext.CreatePost(topicId, userId, content);
     return posts;
   }
+
+
 
   // get the two most recent topics for each topicId in the provided list
   async getRecentByTopics(topicIds, limitPerTopic = 2) {
