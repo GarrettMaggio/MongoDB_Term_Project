@@ -36,13 +36,6 @@ async function dashboard(req, res) {
       topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
     })));
 
-  /*const activity = await DataContext.GetActivityLog().then((logs) => logs.map((entry) => ({
-    ...entry,
-    userName: userModel.displayNameFor(entry.userId),
-    topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
-  })));*/
-
-
   res.html(dashboardView({
     user,
     subscribedSummaries,
