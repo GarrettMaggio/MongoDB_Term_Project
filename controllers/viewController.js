@@ -3,7 +3,7 @@ const userModel = require('../models/userModel');
 const activityModel = require('../models/activityModel')
 const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
-const db = require('../config/databaseSingleton').getInstance();
+const DatabaseSingleton = require('../config/databaseSingleton');
 const { landingView, dashboardView } = require('../views/pages');
 
 async function landing(req, res) {
