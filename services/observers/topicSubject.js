@@ -7,8 +7,10 @@ class TopicSubject {
     this.observers.push(observer);
   }
 
-  notify(eventName, payload) {
-    this.observers.forEach((observer) => observer.update(eventName, payload));
+  async notify(eventName, payload) {
+    for (const observer of this.observers) {
+      await observer.update(eventName, payload);
+    }
   }
 }
 

@@ -23,8 +23,16 @@ class PostModel {
 
   // get the two most recent topics for each topicId in the provided list
   async getRecentByTopics(topicIds, limitPerTopic = 2) {
-    const recentPosts = await DataContext.GetPostsByTopic(topicIds, limitPerTopic);
-    return recentPosts;
+    if (!Array.isArray(topicIds) || topicIds.length === 0) return [];
+
+    const grouped = await Promise.all(
+      topicIds.map(async (topicId) => ({
+        topicId,
+        posts: await DataContext.GetPostsByTopic(topicId, limitPerTopic)
+      }))
+    );
+
+    return grouped;
   }
 }
 

@@ -1,20 +1,18 @@
 const DatabaseSingleton = require('../../config/databaseSingleton');
 
 class StatsObserver {
-  update(eventName, payload) {
+  async update(eventName, payload) {
     if (eventName !== 'post:created') return;
 
-    const db = DatabaseSingleton.getInstance();
-    const topicStats = db.getCollection('topicStats');
-    let stat = topicStats.find((row) => row.topicId === payload.topicId);
-
-    if (!stat) {
-      stat = { topicId: payload.topicId, totalPosts: 0, lastPostAt: null };
-      topicStats.push(stat);
-    }
-
-    stat.totalPosts += 1;
-    stat.lastPostAt = payload.createdAt;
+    const db = await DatabaseSingleton.getInstance();
+    await db.collection('Stats').updateOne(
+      { topicId: payload.topicId },
+      {
+        $inc: { totalPosts: 1 },
+        $set: { lastPostAt: payload.createdAt || new Date().toISOString() }
+      },
+      { upsert: true }
+    );
   }
 }
 

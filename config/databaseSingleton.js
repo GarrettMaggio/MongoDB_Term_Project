@@ -1,16 +1,26 @@
-require('dotenv').config({path: './config/mongo.env'});
-//const datacontext = require('../data/datacontext');
-const {MongoClient} = require("mongodb");
-const client = new MongoClient(process.env.MONGO_URI);
+const path = require('path');
+const dotenv = require('dotenv');
+const { MongoClient } = require('mongodb');
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 
 
 class DatabaseSingleton {
   static instance;
+  static client;
   
   static async createInstance() {
-    await client.connect();
-    const database = client.db('ProjectDataBase');
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI is not defined. Ensure .env is configured.');
+    }
+
+    if (!DatabaseSingleton.client) {
+      DatabaseSingleton.client = new MongoClient(process.env.MONGO_URI);
+    }
+
+    await DatabaseSingleton.client.connect();
+    const database = DatabaseSingleton.client.db('ProjectDataBase');
     DatabaseSingleton.instance = database;
     return DatabaseSingleton.instance;
   }
@@ -20,13 +30,6 @@ class DatabaseSingleton {
       DatabaseSingleton.instance = await DatabaseSingleton.createInstance();
     }
     return DatabaseSingleton.instance;
-  }
-
-  getCollection(name) {
-    if (!this.data[name]) {
-      throw new Error(`Unknown collection: ${name}`);
-    }
-    return this.data[name];
   }
   
 }

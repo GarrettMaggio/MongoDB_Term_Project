@@ -3,8 +3,6 @@ const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const userModel = require('../models/userModel');
 const { exploreView, myTopicsView, topicView } = require('../views/pages');
-const userModel = require('../models/userModel');
-const DataContext = require('../data/datacontext');
 //const { landingView } = require('../views/pages');
 
 
@@ -18,16 +16,18 @@ async function landing(req, res) {
 
 async function explore(req, res) {
   const user = await userModel.findById(req.session.userId);
+  const userId = user?.id || user?._id?.toString() || req.session.userId?.toString();
   const query = req.query.q || '';
   const topics = await topicModel.search(query);
-  const subscribedTopicIds = await subscriptionModel.listTopicIdsByUser(user.id);
+  const subscribedTopicIds = await subscriptionModel.listTopicIdsByUser(userId);
 
   res.html(exploreView({ user, topics, subscribedTopicIds, query }));
 }
 
 async function myTopics(req, res) {
   const user = await userModel.findById(req.session.userId);
-  const subscriptions = await subscriptionModel.listByUser(user.id);
+  const userId = user?.id || user?._id?.toString() || req.session.userId?.toString();
+  const subscriptions = await subscriptionModel.listByUser(userId);
 
   const topics = await Promise.all(
     subscriptions.map((s) => topicModel.findById(s.topicId))
@@ -62,16 +62,19 @@ async function createTopic(req, res) {
 
 async function subscribe(req, res) {
   const topic = await topicModel.findById(req.params.topicId);
+  const userId = req.session.userId?.toString();
 
-  if (topic) {
-    await subscriptionModel.subscribe(req.session.userId, req.params.topicId);
+  if (!topic) {
+    return res.status(404).text('Topic not found');
   }
 
+  await subscriptionModel.subscribe(userId, req.params.topicId);
   res.redirect('back');
 }
 
 async function unsubscribe(req, res) {
-  await subscriptionModel.unsubscribe(req.session.userId, req.params.topicId);
+  const userId = req.session.userId?.toString();
+  await subscriptionModel.unsubscribe(userId, req.params.topicId);
   res.redirect('back');
 }
 

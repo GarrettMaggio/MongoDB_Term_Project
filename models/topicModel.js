@@ -5,7 +5,15 @@ const { ObjectId } = require('mongodb');
 class TopicModel {
   async getallTopics() {
     const topics = await DataContext.GetTopics();
-    return Array.isArray(topics) ? topics : [];
+    if (!Array.isArray(topics)) return [];
+    return topics.map((topic) => ({
+      ...topic,
+      id: topic.id || topic._id?.toString()
+    }));
+  }
+
+  async getAll() {
+    return this.getallTopics();
   }
 
   async getallStats() {
@@ -15,7 +23,7 @@ class TopicModel {
 
   async findById(topicId) {
     const topics = await this.getallTopics();
-    return topics.find((topic) => topic.id === topicId);
+    return topics.find((topic) => topic.id === topicId || topic._id?.toString() === topicId) || null;
   }
 
   async search(query = '') {
@@ -32,7 +40,7 @@ class TopicModel {
   }
 
   async getTrending(limit = 6) {
-    const topics = await DataContext.GetTopics();
+    const topics = await this.getallTopics();
     
     if (!Array.isArray(topics)) {
       return [];

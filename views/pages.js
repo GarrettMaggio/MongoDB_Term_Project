@@ -36,7 +36,7 @@ function landingView({ trending = [] }) {
       <section class="section-block">
         <div class="section-head">
           <h2>Trending Topics</h2>
-          <p>Live mock data to keep demos populated and interactive.</p>
+          <p>Live community topics updating in real time as engagement grows.</p>
         </div>
         <div class="card-grid">${trendCards}</div>
       </section>

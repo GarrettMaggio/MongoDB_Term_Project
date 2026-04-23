@@ -3,7 +3,6 @@ const userModel = require('../models/userModel');
 const activityModel = require('../models/activityModel')
 const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
-const DatabaseSingleton = require('../config/databaseSingleton');
 const { landingView, dashboardView } = require('../views/pages');
 
 async function landing(req, res) {
@@ -12,29 +11,36 @@ async function landing(req, res) {
 }
 
 async function dashboard(req, res) {
-  const user = await userModel.findById(req.session.userId);
+  const sessionUserId = req.session.userId?.toString();
+  const user = await userModel.findById(sessionUserId);
   
   if (!user) {
     return res.redirect('/auth/login?msg=Please%20log%20in%20to%20access%20the%20dashboard');
   }
 
-  const subscribedIds = await subscriptionModel.listTopicIdsByUser(user._id);
+  const subscribedIds = await subscriptionModel.listTopicIdsByUser(user.id || user._id?.toString());
   const recents = await postModel.getRecentByTopics(subscribedIds, 2);
-  const subscribedSummaries = await recents
-    .map((r) => ({ topic: topicModel.findById(r.topicId), posts: r.posts }))
-    .filter((r) => r.topic)
-    .map((r) => ({
-      ...r,
-      posts: r.posts.map((p) => ({ ...p, userName: userModel.displayNameFor(p.userId) }))
-    }));
+  const subscribedSummaries = (
+    await Promise.all(recents.map(async (r) => ({
+      topic: await topicModel.findById(r.topicId),
+      posts: await Promise.all((r.posts || []).map(async (p) => ({
+        ...p,
+        userName: await userModel.displayNameFor(p.userId)
+      })))
+    })))
+  ).filter((r) => r.topic);
 
     // Fix this first thing after morning class
 
-    const activity = await activityModel.getActivityLog().then((logs) => logs.map((entry) => ({
+  const activityLogs = await activityModel.getActivityLog();
+  const activity = await Promise.all(activityLogs.map(async (entry) => {
+    const topic = await topicModel.findById(entry.topicId);
+    return {
       ...entry,
-      userName: userModel.displayNameFor(entry.userId),
-      topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
-    })));
+      userName: await userModel.displayNameFor(entry.userId),
+      topicName: topic?.name || entry.topicId
+    };
+  }));
 
   res.html(dashboardView({
     user,

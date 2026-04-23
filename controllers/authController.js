@@ -16,7 +16,7 @@ async function login(req, res) {
 
   const user = await userModel.findByCredentials(username, password);
   if (!user) return res.redirect('/auth/login?msg=Invalid%20credentials');
-  req.session.userId = user._id;
+  req.session.userId = user.id || user._id?.toString();
   return res.redirect('/dashboard');
 }
 
@@ -30,7 +30,7 @@ async function register(req, res) {
   console.log(user._id);
   console.log('Created user:', user.username, 'Password:', user.password, 'DisplayName:', user.displayName);
   if (!user) return res.redirect('/auth/register?msg=Username%20already%20exists');
-  req.session.userId = user._id;
+  req.session.userId = user.id || user._id?.toString();
   return res.redirect('/dashboard');
 }
 
