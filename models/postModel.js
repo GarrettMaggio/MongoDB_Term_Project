@@ -1,42 +1,30 @@
-//const DatabaseSingleton = require('../config/databaseSingleton');
 const DataContext = require('../data/datacontext');
-
 
 class PostModel {
 
-  getPosts() {
-    const posts = DataContext.GetPosts();
+  async getPosts() {
+    const posts = await DataContext.GetPosts();
     return posts;
   }
 
-  listByTopic(topicId) {
-    return this.getPosts()
+  async listByTopic(topicId) {
+    const posts = await DataContext.GetPosts();
+    return posts
       .filter((post) => post.topicId === topicId)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
-  create({ topicId, userId, content }) {
-    const posts = this.getPosts();
-    const post = {
-      id: `p${posts.length + 1}`,
-      topicId,
-      userId,
-      content,
-      createdAt: new Date().toISOString()
-    };
-    posts.push(post);
-    return post;
+  async create({ topicId, userId, content }) {
+    const posts = await DataContext.CreatePost(topicId, userId, content);
+    return posts;
   }
 
-  getRecentByTopics(topicIds, limitPerTopic = 2) {
-    const allPosts = this.getPosts();
-    return topicIds.map((topicId) => ({
-      topicId,
-      posts: allPosts
-        .filter((p) => p.topicId === topicId)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, limitPerTopic)
-    }));
+
+
+  // get the two most recent topics for each topicId in the provided list
+  async getRecentByTopics(topicIds, limitPerTopic = 2) {
+    const recentPosts = await DataContext.GetPostsByTopic(topicIds, limitPerTopic);
+    return recentPosts;
   }
 }
 

@@ -3,6 +3,16 @@ const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const userModel = require('../models/userModel');
 const { exploreView, myTopicsView, topicView } = require('../views/pages');
+//const { landingView } = require('../views/pages');
+
+
+/*async function landing(req, res) {
+  const trending = await topicModel.getTrending(6);
+  console.log("TRENDING =", trending);
+  console.log("IS ARRAY =", Array.isArray(trending));
+  console.log("TYPE =", typeof trending);
+  res.html(landingView({ trending }));  
+}*/
 
 async function explore(req, res) {
   const user = await userModel.findById(req.session.userId);
