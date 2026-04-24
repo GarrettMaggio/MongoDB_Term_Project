@@ -30,32 +30,71 @@ class DataContext {
     }));
   }
 
-  static async GetSubscriptions() {
-    const db = await getDatabase();
-    const subscriptions = await db.collection('Subscriptions').find({}).toArray();
+    static async GetSubscriptions() {
+        const db = await getDatabase();
+        return db.collection('Subscriptions').find({}).toArray();
+    }
 
-    return subscriptions.map((sub) => ({
-      ...sub,
-      id: sub.id || sub._id?.toString(),
-      userId: sub.userId || '',
-      topicId: sub.topicId || ''
-    }));
-  }
+    static async CreateSubscription(userId, topicId) {
+        const db = await getDatabase();
+    }
 
-  static async GetStats() {
-    const db = await getDatabase();
-    const stats = await db.collection('Stats').find({}).toArray();
+    static async FindSubscriptionsById(userId) {
+        const db = await getDatabase();
+        return db.collection('Subscriptions').find({userId}).toArray();
+    }
 
-    return stats.map((stat) => ({
-      ...stat,
-      id: stat.id || stat._id?.toString(),
-      name: stat.name || stat.title || '',
-      tags: Array.isArray(stat.tags) ? stat.tags : [],
-      accessCount: stat.accessCount ?? stat.visits ?? 0,
-      totalPosts: stat.totalPosts ?? 0,
-      lastPostAt: stat.lastPostAt || null
-    }));
-  }
+    static async DeleteSubscription(userId, topicId) {
+        const db =  await getDatabase();
+        return await db.collection('Subscriptions').deleteOne({ userId, topicId });
+    }
+
+    static async GetStats() {
+        const db = await getDatabase();
+        return db.collection('Stats').find({}).toArray();
+    }
+    
+    static async CreateStat(type, topicId, userId) {
+        const db = await getDatabase();
+    }
+
+    static async DeleteStat(type, topicId, userId) {
+        const db = await getDatabase();
+        return await db.collection('Stats').deleteOne({ type, topicId, userId });
+    }
+
+    static async GetPosts() {
+        const db = await getDatabase();
+        return db.collection('Posts').find({}).toArray();
+    }
+
+    static async GetPostsByTopic(topicId, limit = 2) {
+        const db = await getDatabase();
+        return db.collection('Posts').find({ topicId }).sort({ createdAt: -1 }).limit(limit).toArray(); 
+    }
+
+    static async CreatePost(topicId, userId, content) {
+        const db = await getDatabase();
+        const post = { topicId, userId, content, createdAt: new Date().toISOString()};
+        const result = await db.collection('Posts').insertOne(post);
+        console.log('Inserted post with ID:', result.insertedId);
+        console.log('Post data:', post);
+        return {
+            _id: result.insertedId,
+            ...post
+        }
+    }
+
+    static async DeletePost(postId) {
+        const db = await getDatabase();
+        return await db.collection('Posts').deleteOne({ _id: postId });
+    }
+
+    static async GetActivityLog() {
+        const db = await getDatabase();
+        return db.collection('ActivityLog').find({}).toArray();
+    }
+    
 }
+module.exports = DataContext;
 
-module.exports = DataContext; 
