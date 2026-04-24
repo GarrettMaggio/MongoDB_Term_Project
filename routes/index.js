@@ -29,3 +29,4 @@ module.exports = [
   { method: 'GET', path: /^\/api\/topics\/stats$/, handler: topicStatsApi, auth: true },
   { method: 'GET', path: /^\/api\/users\/me$/, handler: meApi, auth: true }
 ];
+

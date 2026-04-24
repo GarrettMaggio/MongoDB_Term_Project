@@ -1,16 +1,16 @@
-//const DatabaseSingleton = require('../config/databaseSingleton');
-const { db } = require('./userModel');
 const DataContext = require('../data/datacontext');
+const DatabaseSingleton = require('../config/databaseSingleton');
+const { ObjectId } = require('mongodb');
 
 class TopicModel {
-
   async getallTopics() {
     const topics = await DataContext.GetTopics();
-    return topics;
+    return Array.isArray(topics) ? topics : [];
   }
+
   async getallStats() {
     const stats = await DataContext.GetStats();
-    return stats;
+    return Array.isArray(stats) ? stats : [];
   }
 
   async findById(topicId) {
@@ -21,45 +21,52 @@ class TopicModel {
   async search(query = '') {
     const topics = await this.getallTopics();
     const term = query.trim().toLowerCase();
+
     if (!term) return topics;
-    return topics.filter((topic) => (
-      topic.name.toLowerCase().includes(term)
-      || topic.description.toLowerCase().includes(term)
-      || topic.tags.some((tag) => tag.toLowerCase().includes(term))
-    ));
+
+    return topics.filter((topic) =>
+      (topic.name || '').toLowerCase().includes(term) ||
+      (topic.description || '').toLowerCase().includes(term) ||
+      (Array.isArray(topic.tags) && topic.tags.some((tag) => tag.toLowerCase().includes(term)))
+    );
   }
 
   async getTrending(limit = 6) {
-    const topics = await DataContext.GetTopics();
-    
-    if (!Array.isArray(topics)) {
-      return [];
-    }
+    const topics = await this.getallTopics();
 
     return topics
-    .sort((a, b) => b.accessCount - a.accessCount)
-    .slice(0, limit);
+      .sort((a, b) => (b.accessCount || 0) - (a.accessCount || 0))
+      .slice(0, limit);
   }
 
-  incrementAccess(topicId) {
-    const topic = this.findById(topicId);
-    if (topic) topic.accessCount += 1;
-    return topic;
+  async incrementAccess(topicId) {
+    const db = await DatabaseSingleton.getInstance();
+
+    await db.collection('Topics').updateOne(
+      { _id: new ObjectId(topicId) },
+      { $inc: { accessCount: 1 } }
+    );
+
+    return await this.findById(topicId);
   }
 
   async create({ name, description, tags, createdBy }) {
-    const topics = await this.getallTopics();
-    const topic = {
-      id: `t${topics.length + 1}`,
+    const db = await DatabaseSingleton.getInstance();
+
+    const newTopic = {
       name,
       description,
-      tags,
-      createdBy,
+      tags: Array.isArray(tags) ? tags : [],
+      createdBy: createdBy || null,
       accessCount: 0
     };
-    topics.push(topic);
-    //this.getallStats().push({ topicId: topic.id, totalPosts: 0, lastPostAt: null });
-    return topic;
+
+    const result = await db.collection('Topics').insertOne(newTopic);
+
+    return {
+      ...newTopic,
+      id: result.insertedId.toString()
+    };
   }
 }
 

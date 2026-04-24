@@ -1,41 +1,34 @@
 const DatabaseSingleton = require('../config/databaseSingleton');
 
 async function getDatabase() {
-    return await DatabaseSingleton.getInstance();
-}   
+  return await DatabaseSingleton.getInstance();
+}
 
 class DataContext {
+  static async ConnectUser() {
+    const db = await getDatabase();
+    const users = await db.collection('Users').find({}).toArray();
 
-    static async ConnectUser() {
-        const db = await getDatabase();
-        return db.collection('Users').find({}).toArray(); 
-    }
+    return users.map((user) => ({
+      ...user,
+      id: user.id || user._id?.toString()
+    }));
+  }
 
-    static async CreateUser(username, password, displayName) {
-        const db = await getDatabase();
-        const user = {username, password, displayName};
-        const result = await db.collection('Users').insertOne(user);
-        console.log('Inserted user with ID:', result.insertedId);
-        console.log('User data:', user);
-        return {
-            _id: result.insertedId,
-            ...user
-        };
-    }
+  static async GetTopics() {
+    const db = await getDatabase();
+    const topics = await db.collection('Topics').find({}).toArray();
 
-    static async FindUserById(userId) {
-        const db = await getDatabase();
-        return await db.collection('Users').findOne({ _id: userId });
-    }
-
-    static async GetTopics() {
-        const db = await getDatabase();
-        return db.collection('Topics').find({}).toArray();
-    }
-
-    static async CreateTopic(name, description) {
-        const db = await getDatabase();
-    }
+    return topics.map((topic) => ({
+      ...topic,
+      id: topic.id || topic._id?.toString(),
+      name: topic.name || topic.title || '',
+      description: topic.description || topic.summary || '',
+      tags: Array.isArray(topic.tags) ? topic.tags : [],
+      accessCount: topic.accessCount ?? topic.visits ?? 0,
+      createdBy: topic.createdBy || null
+    }));
+  }
 
     static async GetSubscriptions() {
         const db = await getDatabase();
@@ -51,6 +44,11 @@ class DataContext {
         return db.collection('Subscriptions').find({userId}).toArray();
     }
 
+    static async DeleteSubscription(userId, topicId) {
+        const db =  await getDatabase();
+        return await db.collection('Subscriptions').deleteOne({ userId, topicId });
+    }
+
     static async GetStats() {
         const db = await getDatabase();
         return db.collection('Stats').find({}).toArray();
@@ -58,6 +56,11 @@ class DataContext {
     
     static async CreateStat(type, topicId, userId) {
         const db = await getDatabase();
+    }
+
+    static async DeleteStat(type, topicId, userId) {
+        const db = await getDatabase();
+        return await db.collection('Stats').deleteOne({ type, topicId, userId });
     }
 
     static async GetPosts() {
@@ -80,6 +83,11 @@ class DataContext {
             _id: result.insertedId,
             ...post
         }
+    }
+
+    static async DeletePost(postId) {
+        const db = await getDatabase();
+        return await db.collection('Posts').deleteOne({ _id: postId });
     }
 
     static async GetActivityLog() {
