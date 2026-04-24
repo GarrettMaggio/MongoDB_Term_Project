@@ -1,4 +1,3 @@
-//const DatabaseSingleton = require('../config/databaseSingleton');
 const DataContext = require('../data/datacontext');
 
 class SubscriptionModel {
@@ -17,19 +16,21 @@ class SubscriptionModel {
   }
 
   async isSubscribed(userId, topicId) {
-    return await this.getSubscriptions().some((s) => s.userId === userId && s.topicId === topicId);
+    return await DataContext.FindSubscriptionsById(userId, topicId);
   }
 
   async subscribe(userId, topicId) {
-    const subscriptions = await this.getSubscriptions();
-    if (subscriptions.some((s) => s.userId === userId && s.topicId === topicId)) return false;
-    subscriptions.push({ userId, topicId });
+    const existing = await DataContext.FindSubscriptionsById(userId, topicId);
+    if (existing.length > 0) {
+      return false;
+    }
+    await DataContext.CreateSubscription(userId, topicId);
     return true;
   }
 
   async unsubscribe(userId, topicId) {
-    const subscriptions = await this.getSubscriptions();
-    const idx = subscriptions.findIndex((s) => s.userId === userId && s.topicId === topicId);
+    const subscriptions = await DataContext.GetSubscriptions();
+    const idx = subscriptions.FindSubscriptionsById((s) => s.userId === userId && s.topicId === topicId);
     if (idx === -1) return false;
     subscriptions.splice(idx, 1);
     return true;

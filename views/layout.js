@@ -1,4 +1,4 @@
-function renderLayout({ title, body, user, active = '', message = '' }) {
+function renderLayout({ title, topics, body, user, active = '', message = '' }) {
   return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -22,7 +22,17 @@ function renderLayout({ title, body, user, active = '', message = '' }) {
     </header>
     <main class="app-shell">
       ${message ? `<div class="flash">${message}</div>` : ''}
-      ${body}
+      <div class="layout">
+        <aside class="sidebar">
+          <h2>Topics</h2> 
+          <ul class="topic-list">
+            ${topics ? topics.map((t) => `<li><a href="/topics/${t._id}">${t.name}</a></li>`).join('') : '<li class="muted">No topics yet</li>'}
+          </ul>
+        </aside>
+        <div class="content">
+          ${body}
+        </div>
+      </div>
     </main>
     <script src="/js/app.js"></script>
   </body>

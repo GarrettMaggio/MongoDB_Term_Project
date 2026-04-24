@@ -3,8 +3,7 @@ const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const { exploreView, myTopicsView, topicView } = require('../views/pages');
 const userModel = require('../models/userModel');
-const DataContext = require('../data/datacontext');
-//const { landingView } = require('../views/pages');
+
 
 
 async function landing(req, res) {
@@ -16,59 +15,57 @@ async function landing(req, res) {
 }
 
 async function explore(req, res) {
-  const user = userModel.findById(req.session.userId);
-  const query = req.query.q || '';
-  const topics = await topicModel.search(query);
-  const subscribedTopicIds = subscriptionModel.listTopicIdsByUser(user.id);
-  res.html(exploreView({ user, topics, subscribedTopicIds, query }));
+  const user = await userModel.findById(req.session.userId);
+  //const query = req.query.q || '';
+  const topics = await topicModel.getallTopics(); 
+  const subscribedTopics = await subscriptionModel.getSubscriptions();
+  res.html(exploreView({ user, topics, subscribedTopics }));
 }
 
-function myTopics(req, res) {
-  const user = userModel.findById(req.session.userId);
-  const topics = subscriptionModel.listByUser(user.id).map((s) => topicModel.findById(s.topicId)).filter(Boolean);
+async function myTopics(req, res) {
+  const user = await userModel.findById(req.session.userId); 
+  const topics = await subscriptionModel.getSubscriptions();
   res.html(myTopicsView({ user, topics }));
 }
 
-function createTopic(req, res) {
-  const user = userModel.findById(req.session.userId);
+async function createTopic(req, res) {
+  const user = await userModel.findById(req.session.userId);
   const name = (req.body.name || '').trim();
   const description = (req.body.description || '').trim();
   const tags = (req.body.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
 
   if (!name || !description) return res.redirect('/topics/explore?q=');
 
-  const topic = topicModel.create({ name, description, tags, createdBy: user.id });
-  subscriptionModel.subscribe(user.id, topic.id);
+  const topic = await topicModel.create({ name, description, tags, createdBy: user.id });
+  await subscriptionModel.subscribe(user.id, topic.id);
   res.redirect(`/topics/${topic.id}`);
 }
 
-function subscribe(req, res) {
-  if (topicModel.findById(req.params.topicId)) {
-    subscriptionModel.subscribe(req.session.userId, req.params.topicId);
+async function subscribe(req, res) {
+  if (await topicModel.findById(req.params.topicId)) {
+    await subscriptionModel.subscribe(req.session.userId, req.params.topicId);
   }
   res.redirect('back');
 }
 
-function unsubscribe(req, res) {
-  subscriptionModel.unsubscribe(req.session.userId, req.params.topicId);
+async function unsubscribe(req, res) {
+  await subscriptionModel.unsubscribe(req.session.userId, req.params.topicId);
   res.redirect('back');
 }
 
-function topicPage(req, res) {
-  const user = userModel.findById(req.session.userId);
-  const topic = topicModel.incrementAccess(req.params.topicId);
-  if (!topic) return res.status(404).text('Topic not found');
-
-  const posts = postModel.listByTopic(topic.id).map((post) => ({
-    ...post,
-    userName: userModel.displayNameFor(post.userId)
-  }));
+async function topicPage(req, res) {
+  const user = await userModel.findById(req.session.userId);
+  const topic = await topicModel.incrementAccess(req.params.topicId);
+  if (!topic) {
+    return res.status(404).text('Topic not found');
+  }
+  const posts = await postModel.listByTopic(topic._id);
 
   res.html(topicView({
     user,
     topic,
     posts,
-    isSubscribed: subscriptionModel.isSubscribed(user.id, topic.id)
+    isSubscribed: await subscriptionModel.isSubscribed(user.id, topic.id)
   }));
 }
 

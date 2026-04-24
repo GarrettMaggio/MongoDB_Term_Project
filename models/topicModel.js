@@ -8,9 +8,15 @@ class TopicModel {
     const topics = await DataContext.GetTopics();
     return topics;
   }
-  async getallStats() {
+
+  async getStats() {
     const stats = await DataContext.GetStats();
-    return stats;
+    return stats; 
+  }
+  
+  async getTopicStats() {
+    const topicStats = await DataContext.GetStats();
+    return topicStats;
   }
 
   async findById(topicId) {

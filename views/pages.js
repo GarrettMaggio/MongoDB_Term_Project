@@ -126,9 +126,9 @@ function dashboardView({ user, subscribedSummaries, trending, activity, subscrib
   });
 }
 
-function exploreView({ user, topics, subscribedTopicIds, query }) {
+function exploreView({ user, topics, subscribedTopics }) {
   const rows = topics.map((topic) => {
-    const subscribed = subscribedTopicIds.includes(topic.id);
+    const subscribed = subscribedTopics.includes(topic.id);
     return `<article class="panel topic-card">
       <div class="topic-chip">${topic.tags.join(' · ') || 'general'}</div>
       <h3><a class="text-link" href="/topics/${topic.id}">${topic.name}</a></h3>
@@ -142,6 +142,7 @@ function exploreView({ user, topics, subscribedTopicIds, query }) {
 
   return renderLayout({
     title: 'Explore Topics',
+    topics,
     user,
     active: 'explore',
     body: `<section class="section-block">
@@ -150,7 +151,7 @@ function exploreView({ user, topics, subscribedTopicIds, query }) {
         <p>Browse and subscribe to topics to customize your dashboard feed.</p>
       </div>
       <form class="search-row" method="GET">
-        <input name="q" value="${query}" placeholder="Search by name, description, or tag" />
+        <input name="q" value="${topics}" placeholder="Search by name, description, or tag" />
         <button class="btn" type="submit">Search</button>
       </form>
       <div class="card-grid">${rows || '<article class="panel"><p class="muted">No topics found.</p></article>'}</div>
@@ -204,7 +205,7 @@ function topicView({ user, topic, posts, isSubscribed }) {
         <h1>${topic.name}</h1>
         <p>${topic.description}</p>
         <div class="topic-actions">
-          <span class="topic-chip">${topic.tags.join(' · ') || 'general'}</span>
+          <span class="topic-chip">${topic || 'general'}</span>
           <form method="POST" action="/topics/${topic.id}/${isSubscribed ? 'unsubscribe' : 'subscribe'}">
             <button class="btn ${isSubscribed ? 'btn-ghost' : ''}">${isSubscribed ? 'Unsubscribe' : 'Subscribe'}</button>
           </form>
@@ -244,7 +245,7 @@ function statsView({ user, stats }) {
       <article class="panel table-wrap">
         <table>
           <thead><tr><th>Topic</th><th>Tags</th><th>Access Count</th><th>Total Posts</th><th>Last Post</th></tr></thead>
-          <tbody>${stats.map((row) => `<tr><td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td><td>${row.tags.join(', ')}</td><td>${row.accessCount}</td><td>${row.totalPosts}</td><td>${row.lastPostAt ? fmt(row.lastPostAt) : '—'}</td></tr>`).join('')}</tbody>
+          <tbody>${stats.map((row) => `<tr><td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td><td></td><td>${row.accessCount}</td><td>${row.totalPosts}</td><td>${row.lastPostAt ? fmt(row.lastPostAt) : '—'}</td></tr>`).join('')}</tbody>
         </table>
       </article>
     </section>`
