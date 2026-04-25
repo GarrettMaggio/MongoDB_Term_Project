@@ -3,7 +3,8 @@ const subscriptionModel = require('../models/subscriptionModel');
 const postModel = require('../models/postModel');
 const userModel = require('../models/userModel');
 const { exploreView, myTopicsView, topicView } = require('../views/pages');
-//const { landingView } = require('../views/pages');
+const userModel = require('../models/userModel');
+
 
 
 /*async function landing(req, res) {
@@ -16,11 +17,10 @@ const { exploreView, myTopicsView, topicView } = require('../views/pages');
 
 async function explore(req, res) {
   const user = await userModel.findById(req.session.userId);
-  const query = req.query.q || '';
-  const topics = await topicModel.search(query);
-  const subscribedTopicIds = await subscriptionModel.listTopicIdsByUser(user.id);
-
-  res.html(exploreView({ user, topics, subscribedTopicIds, query }));
+  //const query = req.query.q || '';
+  const topics = await topicModel.getallTopics(); 
+  const subscribedTopics = await subscriptionModel.getSubscriptions();
+  res.html(exploreView({ user, topics, subscribedTopics }));
 }
 
 async function myTopics(req, res) {
@@ -36,6 +36,8 @@ async function myTopics(req, res) {
 
 async function createTopic(req, res) {
   const user = await userModel.findById(req.session.userId);
+async function createTopic(req, res) {
+  const user = await userModel.findById(req.session.userId);
   const name = (req.body.name || '').trim();
   const description = (req.body.description || '').trim();
   const tags = (req.body.tags || '')
@@ -47,21 +49,20 @@ async function createTopic(req, res) {
     return res.redirect('/topics/explore?q=');
   }
 
-  const topic = await topicModel.create({
+  const topic = await await topicModel.create({
     name,
     description,
     tags,
     createdBy: user.id
   });
 
-  await subscriptionModel.subscribe(user.id, topic.id);
+  await await subscriptionModel.subscribe(user.id, topic.id);
   res.redirect(`/topics/${topic.id}`);
 }
 
 async function subscribe(req, res) {
-  const topic = await topicModel.findById(req.params.topicId);
-
-  if (topic) {
+  console.log("Inside subscribe from topicController");
+  if (await topicModel.findById(req.params.topicId)) {
     await subscriptionModel.subscribe(req.session.userId, req.params.topicId);
   }
 

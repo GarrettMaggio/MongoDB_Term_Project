@@ -19,9 +19,9 @@ module.exports = [
   { method: 'GET', path: /^\/topics\/explore$/, handler: explore, auth: true },
   { method: 'GET', path: /^\/topics\/my$/, handler: myTopics, auth: true },
   { method: 'POST', path: /^\/topics$/, handler: createTopic, auth: true },
-  { method: 'POST', path: /^\/topics\/([^/]+)\/subscribe$/, handler: (req, res, m) => { req.params.topicId = m[1]; subscribe(req, res); }, auth: true },
-  { method: 'POST', path: /^\/topics\/([^/]+)\/unsubscribe$/, handler: (req, res, m) => { req.params.topicId = m[1]; unsubscribe(req, res); }, auth: true },
-  { method: 'GET', path: /^\/topics\/([^/]+)$/, handler: (req, res, m) => { req.params.topicId = m[1]; topicPage(req, res); }, auth: true },
+  { method: 'POST', path: /^\/topics\/([^/]+)\/subscribe$/,  handler: async (req, res, m) => { req.params.topicId = m[1]; await subscribe(req, res); }, auth: true },
+  { method: 'POST', path: /^\/topics\/([^/]+)\/unsubscribe$/, handler: async (req, res, m) => { req.params.topicId = m[1]; await unsubscribe(req, res); }, auth: true },
+  { method: 'GET', path: /^\/topics\/([^/]+)$/, handler: async (req, res, m) => { req.params.topicId = m[1]; await topicPage(req, res); }, auth: true },
 
   { method: 'POST', path: /^\/posts$/, handler: createPost, auth: true },
   { method: 'GET', path: /^\/stats$/, handler: statsPage, auth: true },

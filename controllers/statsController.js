@@ -3,10 +3,11 @@ const userModel = require('../models/userModel');
 const db = require('../config/databaseSingleton').getInstance();
 const { statsView } = require('../views/pages');
 
-function statsPage(req, res) {
-  const user = userModel.findById(req.session.userId);
-  const topicStats = db.getCollection('topicStats');
-  const stats = topicModel.getAll().map((topic) => {
+async function statsPage(req, res) {
+  const user = await userModel.findById(req.session.userId); 
+  const topicStats = await topicModel.getTopicStats();
+  const strawStats = await topicModel.getStats();
+  const stats = strawStats.map((topic) => {
     const tracked = topicStats.find((row) => row.topicId === topic.id) || { totalPosts: 0, lastPostAt: null };
     return {
       id: topic.id,

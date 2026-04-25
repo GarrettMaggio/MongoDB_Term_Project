@@ -1,4 +1,3 @@
-const DatabaseSingleton = require('../config/databaseSingleton');
 const DataContext = require('../data/datacontext');
 
 class SubscriptionModel {
@@ -28,54 +27,24 @@ class SubscriptionModel {
   }
 
   async isSubscribed(userId, topicId) {
-    const subscriptions = await this.getSubscriptions();
-    const uid = userId?.toString();
-    const tid = topicId?.toString();
-
-    return subscriptions.some((s) => s.userId === uid && s.topicId === tid);
+    return await DataContext.FindSubscriptionsById(userId, topicId);
   }
 
   async subscribe(userId, topicId) {
-    const db = await DatabaseSingleton.getInstance();
-
-    const uid = userId?.toString();
-    const tid = topicId?.toString();
-
-    const existing = await db.collection('Subscriptions').findOne({
-      userId: uid,
-      topicId: tid
-    });
-
-    if (existing) {
-      return {
-        ...existing,
-        id: existing._id?.toString(),
-        userId: existing.userId?.toString(),
-        topicId: existing.topicId?.toString()
-      };
-    }
-
-    const newSubscription = {
-      userId: uid,
-      topicId: tid
-    };
-
-    const result = await db.collection('Subscriptions').insertOne(newSubscription);
-
-    return {
-      ...newSubscription,
-      id: result.insertedId.toString()
-    };
+    const existing = await DataContext.FindSubscriptionsById(userId, topicId);
+    console.log("Inside subscribe from SubscriptionModel");
+    /*if (existing.length > 0) {
+      return false;
+    }*/
+    await DataContext.CreateSubscription(userId, topicId);
+    return true;
   }
 
   async unsubscribe(userId, topicId) {
-    const db = await DatabaseSingleton.getInstance();
-
-    await db.collection('Subscriptions').deleteOne({
-      userId: userId?.toString(),
-      topicId: topicId?.toString()
-    });
-
+    const subscriptions = await DataContext.GetSubscriptions();
+    const idx = subscriptions.FindSubscriptionsById((s) => s.userId === userId && s.topicId === topicId);
+    if (idx === -1) return false;
+    subscriptions.splice(idx, 1);
     return true;
   }
 }

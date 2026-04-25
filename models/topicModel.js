@@ -12,6 +12,11 @@ class TopicModel {
     const stats = await DataContext.GetStats();
     return Array.isArray(stats) ? stats : [];
   }
+  
+  async getTopicStats() {
+    const topicStats = await DataContext.GetStats();
+    return topicStats;
+  }
 
   async findById(topicId) {
     const topics = await this.getallTopics();
