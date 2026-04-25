@@ -1,4 +1,5 @@
 const DatabaseSingleton = require('../config/databaseSingleton');
+const { ObjectId } = require('mongodb');
 
 async function getDatabase() {
   return await DatabaseSingleton.getInstance();
@@ -24,8 +25,11 @@ class DataContext {
 
     static async CreateSubscription(userId, topicId) {
         const db = await getDatabase();
+        const topic = await db.collection('Topics').findOne({ _id: new ObjectId(topicId) });
         console.log("Inside CreateSubscription of DataContext");
-        const subscription = { userId, topicId };
+
+        const subscription = {name: topic.name, description: topic.description, userId, topicId, createdAt: new Date().toISOString()};
+
         const result = await db.collection('Subscriptions').insertOne(subscription);
         console.log('Inserted subscription with ID:', result.insertedId);
         console.log('Subscription data:', subscription);
