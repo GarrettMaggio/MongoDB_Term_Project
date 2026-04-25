@@ -42,6 +42,7 @@ async function createTopic(req, res) {
 }
 
 async function subscribe(req, res) {
+  console.log("Inside subscribe from topicController");
   if (await topicModel.findById(req.params.topicId)) {
     await subscriptionModel.subscribe(req.session.userId, req.params.topicId);
   }

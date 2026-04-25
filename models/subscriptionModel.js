@@ -21,9 +21,10 @@ class SubscriptionModel {
 
   async subscribe(userId, topicId) {
     const existing = await DataContext.FindSubscriptionsById(userId, topicId);
-    if (existing.length > 0) {
+    console.log("Inside subscribe from SubscriptionModel");
+    /*if (existing.length > 0) {
       return false;
-    }
+    }*/
     await DataContext.CreateSubscription(userId, topicId);
     return true;
   }

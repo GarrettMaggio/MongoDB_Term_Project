@@ -24,6 +24,7 @@ class DataContext {
 
     static async CreateSubscription(userId, topicId) {
         const db = await getDatabase();
+        console.log("Inside CreateSubscription of DataContext");
         const subscription = { userId, topicId };
         const result = await db.collection('Subscriptions').insertOne(subscription);
         console.log('Inserted subscription with ID:', result.insertedId);
