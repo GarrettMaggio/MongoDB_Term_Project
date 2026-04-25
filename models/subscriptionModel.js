@@ -1,14 +1,22 @@
 const DataContext = require('../data/datacontext');
 
 class SubscriptionModel {
-  getSubscriptions() {
-    const subscriptions = DataContext.GetSubscriptions();
+  async getSubscriptions() {
+    const subscriptions = await DataContext.GetSubscriptions();
     return subscriptions;
   }
 
   /*async listByUser(userId) {
     return await this.getSubscriptions().filter((s) => s.userId === userId);
   }*/
+
+  async getTopicIdsByUserId(userId) {
+    const allSubs = await DataContext.GetSubscriptions();
+    // Filter by the specific user and return just the topicId as a string
+    return allSubs
+      .filter(s => s.userId.toString() === userId.toString())
+      .map(s => s.topicId.toString());
+  }
 
   async listTopicIdsByUser(userId) {
     const SubscriptionsById = await DataContext.FindSubscriptionsById(userId);
@@ -30,10 +38,7 @@ class SubscriptionModel {
   }
 
   async unsubscribe(userId, topicId) {
-    const subscriptions = await DataContext.GetSubscriptions();
-    const idx = subscriptions.FindSubscriptionsById((s) => s.userId === userId && s.topicId === topicId);
-    if (idx === -1) return false;
-    subscriptions.splice(idx, 1);
+    await DataContext.DeleteSubscription(userId, topicId);
     return true;
   }
 }

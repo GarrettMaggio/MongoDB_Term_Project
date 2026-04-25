@@ -1,10 +1,15 @@
 const DatabaseSingleton = require('../config/databaseSingleton');
+const { ObjectId } = require('mongodb');
 
 async function getDatabase() {
-    return await DatabaseSingleton.getInstance();
-}   
+  return await DatabaseSingleton.getInstance();
+}
 
 class DataContext {
+
+    static async toObjectId(id) {
+        return await typeof id === 'string' ? new ObjectId(id) : id;
+    }
 
     static async CreateUser(username, password, displayName) {
         const db = await getDatabase();
@@ -20,12 +25,29 @@ class DataContext {
 
     static async CreateTopic(name, description) {
         const db = await getDatabase();
+        const topic = {name, description};
+        const result = await db.collection('Topics').insertOne(topic);
+        console.log('Inserted topic with ID:', result.insertedId);
+        console.log('Topic data:', topic);
+        return {
+            _id: result.insertedId,
+            ...topic
+        };
     }
 
     static async CreateSubscription(userId, topicId) {
         const db = await getDatabase();
+        const topic = await db.collection('Topics').findOne({ _id: new ObjectId(topicId) });
         console.log("Inside CreateSubscription of DataContext");
-        const subscription = { userId, topicId };
+
+        const existingSubscription = await db.collection('Subscriptions').findOne({ userId: new ObjectId(userId) , topicId: new ObjectId(topicId) });        
+        if (existingSubscription) {
+            console.log('Subscription already exists for userId:', userId, 'and topicId:', topicId);
+            return null;
+        }
+
+        const subscription = {name: topic.name, description: topic.description, userId: new ObjectId(userId), topicId: new ObjectId(topicId), createdAt: new Date().toISOString()};
+
         const result = await db.collection('Subscriptions').insertOne(subscription);
         console.log('Inserted subscription with ID:', result.insertedId);
         console.log('Subscription data:', subscription);
@@ -83,19 +105,20 @@ class DataContext {
         return await db.collection('Users').findOne({ _id: userId });
     }
 
-    static async GetTopics() {
-        const db = await getDatabase();
-        const topics = await db.collection('Topics').find({}).toArray();
-        return topics.map(t => ({
-            ...t,
-            id: t._id.toString(),
-        }));
-    }
+  static async GetTopics() {
+    const db = await getDatabase();
+    const topics = await db.collection('Topics').find({}).toArray();
 
-    static async GetTrendingTopics(limit) {
-        const db = await getDatabase();
-        return db.collection('Topics').find({}).sort({ accessCount: -1}).limit(limit).toArray();
-    }
+    return topics.map((topic) => ({
+      ...topic,
+      id: topic.id || topic._id?.toString(),
+      name: topic.name || topic.title || '',
+      description: topic.description || topic.summary || '',
+      tags: Array.isArray(topic.tags) ? topic.tags : [],
+      accessCount: topic.accessCount ?? topic.visits ?? 0,
+      createdBy: topic.createdBy || null
+    }));
+  }
 
     static async GetSubscriptions() {
         const db = await getDatabase();
@@ -108,12 +131,23 @@ class DataContext {
 
     static async FindSubscriptionsById(userId, topicId) {
         const db = await getDatabase();
-        return db.collection('Subscriptions').find({ userId, topicId }).toArray();
+        return db.collection('Subscriptions').find({ userId: new ObjectId(userId), topicId: new ObjectId(topicId) }).toArray();
     }
 
     static async DeleteSubscription(userId, topicId) {
         const db =  await getDatabase();
-        return await db.collection('Subscriptions').deleteOne({ userId, topicId });
+        const UID = new ObjectId(userId);
+        const TID = new ObjectId(topicId);
+        console.log("Inside DeleteSubscription of DataContext with userId:", {userId: UID}, "and topicId:", {topicId: TID});
+
+        const subscription = await db.collection('Subscriptions').findOne({userId: UID, topicId: TID});
+        if (!subscription) {
+            console.log('No subscription found for userId:', {userId: UID});
+            return null;
+        }
+
+        console.log('Deleting subscription with ID:', subscription._id);
+        return await db.collection('Subscriptions').deleteOne({ _id: subscription._id  });
     }
 
     static async GetStats() {
@@ -136,12 +170,12 @@ class DataContext {
 
     static async GetStatsUser(userId) {
         const db = await getDatabase();
-        return await db.collection('UserStats').findOne({ userId: userId}).toArray();
+        return await db.collection('UserStats').findOne(userId).toArray();
     }
 
     static async UpdateStatsUser(userId, stats) {
         const db = await getDatabase();
-        return await db.collection('UserStats').updateOne({ userId}, { $set: stats}, { upsert: true});
+        return await db.collection('UserStats').updateOne({ userId: new ObjectId(userId) }, { $set: stats }, { upsert: true });
     }
 
     static async GetPosts() {
@@ -167,4 +201,3 @@ class DataContext {
     
 }
 module.exports = DataContext;
-

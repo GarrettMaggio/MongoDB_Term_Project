@@ -15,34 +15,43 @@ async function dashboard(req, res) {
   const user = await userModel.findById(req.session.userId);
   
   if (!user) {
-    return res.redirect('/auth/login?msg=Please%20log%20in%20to%20access%20the%20dashboard');
+    return res.redirect('/auth/login?msg=Please%20log%20in');
   }
 
   const subscribedIds = await subscriptionModel.listTopicIdsByUser(user._id);
+
   const recents = await postModel.getRecentByTopics(subscribedIds, 2);
-  const subscribedSummaries = await recents
-    .map((r) => ({ topic: topicModel.findById(r.topicId), posts: r.posts }))
-    .filter((r) => r.topic)
-    .map((r) => ({
-      ...r,
-      posts: r.posts.map((p) => ({ ...p, userName: userModel.displayNameFor(p.userId) }))
-    }));
 
-    // Fix this first thing after morning class
+  const subscribedSummaries = await Promise.all(recents.map(async (r) => {
+    const topic = await topicModel.findById(r.topicId);
+    if (!topic) return null;
 
-    const activity = await activityModel.getActivityLog().then((logs) => logs.map((entry) => ({
-      ...entry,
-      userName: userModel.displayNameFor(entry.userId),
-      topicName: topicModel.findById(entry.topicId)?.name || entry.topicId
+    const postsWithNames = await Promise.all(r.posts.map(async (p) => ({
+      ...p,
+      userName: await userModel.displayNameFor(p.userId)
     })));
+
+    return { topic, posts: postsWithNames };
+  }));
+
+  const logs = await activityModel.getActivityLog();
+  const activity = await Promise.all(logs.map(async (entry) => {
+    const topic = await topicModel.findById(entry.topicId);
+    return {
+      ...entry,
+      userName: await userModel.displayNameFor(entry.userId),
+      topicName: topic?.name || 'General'
+    };
+  }));
 
   res.html(dashboardView({
     user,
-    subscribedSummaries,
+    subscribedSummaries: subscribedSummaries.filter(Boolean), 
     activity,
     trending: await topicModel.getTrending(5),
-    subscribedTopics: subscribedSummaries.map((s) => s.topic)
+    subscribedTopics: subscribedSummaries.filter(Boolean).map(s => s.topic)
   }));
 }
+
 
 module.exports = { landing, dashboard };

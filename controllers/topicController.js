@@ -16,9 +16,8 @@ async function landing(req, res) {
 
 async function explore(req, res) {
   const user = await userModel.findById(req.session.userId);
-  //const query = req.query.q || '';
   const topics = await topicModel.getallTopics(); 
-  const subscribedTopics = await subscriptionModel.getSubscriptions();
+  const subscribedTopics = await subscriptionModel.getTopicIdsByUserId(req.session.userId);
   res.html(exploreView({ user, topics, subscribedTopics }));
 }
 
@@ -36,9 +35,9 @@ async function createTopic(req, res) {
 
   if (!name || !description) return res.redirect('/topics/explore?q=');
 
-  const topic = await topicModel.create({ name, description, tags, createdBy: user.id });
-  await subscriptionModel.subscribe(user.id, topic.id);
-  res.redirect(`/topics/${topic.id}`);
+  const topic = await topicModel.create({ name, description, tags, createdBy: user._id });
+  await subscriptionModel.subscribe(user._id, topic._id);
+  res.redirect(`/topics/${topic._id}`);
 }
 
 async function subscribe(req, res) {
@@ -66,7 +65,7 @@ async function topicPage(req, res) {
     user,
     topic,
     posts,
-    isSubscribed: await subscriptionModel.isSubscribed(user.id, topic.id)
+    isSubscribed: await subscriptionModel.isSubscribed(user._id, topic._id)
   }));
 }
 
