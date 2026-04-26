@@ -17,4 +17,5 @@ class StatsObserver {
   }
 }
 
+
 module.exports = StatsObserver;
