@@ -1,9 +1,10 @@
-const DatabaseSingleton = require('../../config/databaseSingleton');
+//const DatabaseSingleton = require('../../config/databaseSingleton');
+const DataContext = require('../../data/datacontext');
 
 class ActivityObserver {
-  update(eventName, payload) {
-    const db = DatabaseSingleton.getInstance();
-    const activityLog = db.getCollection('activityLog');
+  
+  async update(eventName, payload) {
+    const activityLog = await DataContext.GetActivityLog();
     activityLog.unshift({
       id: `a-${Date.now()}`,
       eventName,

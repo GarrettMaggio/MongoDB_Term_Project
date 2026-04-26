@@ -14,8 +14,6 @@ class SubscriptionModel {
     const allSubs = await DataContext.GetSubscriptions();
     // Filter by the specific user and return just the topicId as a string
     return allSubs
-      .filter(s => s.userId.toString() === userId.toString())
-      .map(s => s.topicId.toString());
   }
 
   async listTopicIdsByUser(userId) {
