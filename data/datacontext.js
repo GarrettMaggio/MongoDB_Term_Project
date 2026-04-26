@@ -72,7 +72,7 @@ class DataContext {
 
     static async CreatePost(topicId, userId, content) {
         const db = await getDatabase();
-        const post = { topicId, userId, content, createdAt: new Date().toISOString()};
+        const post = { topicId : new ObjectId(topicId), userId, content, createdAt: new Date()};
         const result = await db.collection('Posts').insertOne(post);
         console.log('Inserted post with ID:', result.insertedId);
         console.log('Post data:', post);
@@ -133,9 +133,11 @@ class DataContext {
         }));
     }
 
-    static async FindSubscriptionsById(userId, topicId) {
+    static async FindSubscriptionsById(userId) {
         const db = await getDatabase();
-        return db.collection('Subscriptions').find({ userId: new ObjectId(userId), topicId: new ObjectId(topicId) }).toArray();
+        const userSubs = await db.collection('Subscriptions').find({ userId: new ObjectId(userId) }).toArray();
+        console.log("Inside FindSubscriptionsById here are the user subscriptions for userId:", {userId}, "subscriptions found:", userSubs);
+        return userSubs;
     }
 
     static async GetSubscriptionsByUserId(userId) {
@@ -216,9 +218,28 @@ class DataContext {
         return db.collection('Posts').find({}).toArray();
     }
 
-    static async GetPostsByTopic(topicId, limit = 2) {
+    static async GetPostsByTopic(topicIds, limit = 2) {
         const db = await getDatabase();
-        return db.collection('Posts').find({ topicId }).sort({ createdAt: -1 }).limit(limit).toArray(); 
+        const ids = topicIds.map(id => typeof id === 'string' ? new ObjectId(id) : id);        console.log("TopicIds for GetPostsByTopic:", ids);
+        console.log(await db.collection('Posts').findOne({}));
+
+        const results = await Promise.all(
+            ids.map(async (topicId) => {
+                const posts = await db.collection('Posts')
+                    .find({ topicId })
+                    .sort({ createdAt: -1 })
+                    .limit(limit)
+                    .toArray();
+
+                return {
+                    topicId,
+                    posts
+                };
+            })
+        );
+        console.log("Results from GetPostsByTopic:", results);
+        console.log("TopicId:", topicIds);
+        return results;
     }
 
     static async DeletePost(postId) {

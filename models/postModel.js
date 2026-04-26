@@ -22,6 +22,7 @@ class PostModel {
   // get the two most recent topics for each topicId in the provided list
   async getRecentByTopics(topicIds, limitPerTopic = 2) {
     const recentPosts = await DataContext.GetPostsByTopic(topicIds, limitPerTopic);
+    console.log("Recent posts for topicIds:", recentPosts);
     return recentPosts;
   }
 

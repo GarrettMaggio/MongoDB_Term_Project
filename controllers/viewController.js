@@ -11,7 +11,7 @@ async function landing(req, res) {
 }
 
 async function dashboard(req, res) {
-  const user = await userModel.findById(req.session.userId);
+  const user = await userModel.findById(req.session.userId); 
 
   if (!user) {
     return res.redirect('/auth/login?msg=Please%20log%20in');

@@ -18,7 +18,7 @@ class SubscriptionModel {
 
   async listTopicIdsByUser(userId) {
     const SubscriptionsById = await DataContext.FindSubscriptionsById(userId);
-    return SubscriptionsById.map((s) => s.topicId);
+    return SubscriptionsById;
   }
 
   async isSubscribed(userId, topicId) {
