@@ -24,6 +24,11 @@ class PostModel {
     const recentPosts = await DataContext.GetPostsByTopic(topicIds, limitPerTopic);
     return recentPosts;
   }
+
+  async countTotalPosts() {
+    const posts = await DataContext.GetPosts();
+    return posts.length;
+  }
 }
 
 module.exports = new PostModel();

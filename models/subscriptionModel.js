@@ -3,22 +3,17 @@ const DataContext = require('../data/datacontext');
 class SubscriptionModel {
   async getSubscriptions() {
     const subscriptions = await DataContext.GetSubscriptions();
-
-    return Array.isArray(subscriptions)
-      ? subscriptions.map((s) => ({
-          ...s,
-          id: s.id || s._id?.toString(),
-          userId: s.userId?.toString() || '',
-          topicId: s.topicId?.toString() || ''
-        }))
-      : [];
+    return subscriptions;
   }
 
-  async listByUser(userId) {
-    const subscriptions = await this.getSubscriptions();
-    const id = userId?.toString();
+  /*async listByUser(userId) {
+    return await this.getSubscriptions().filter((s) => s.userId === userId);
+  }*/
 
-    return subscriptions.filter((s) => s.userId === id);
+  async getTopicIdsByUserId(userId) {
+    const allSubs = await DataContext.GetSubscriptions();
+    // Filter by the specific user and return just the topicId as a string
+    return allSubs
   }
 
   async listTopicIdsByUser(userId) {
@@ -37,15 +32,23 @@ class SubscriptionModel {
       return false;
     }*/
     await DataContext.CreateSubscription(userId, topicId);
+    await DataContext.UpdateStats(userId, topicId);
     return true;
   }
 
   async unsubscribe(userId, topicId) {
-    const subscriptions = await DataContext.GetSubscriptions();
-    const idx = subscriptions.FindSubscriptionsById((s) => s.userId === userId && s.topicId === topicId);
-    if (idx === -1) return false;
-    subscriptions.splice(idx, 1);
+    await DataContext.DeleteSubscription(userId, topicId);
     return true;
+  }
+
+  async countTotalAccesses() {
+    const accessCounts = await DataContext.GetAccessCounts();
+    return accessCounts;
+  }
+
+  async countTotalSubscriptions(userId) {
+    const subscriptions = await DataContext.GetSubscriptionsByUserId(userId);
+    return subscriptions.length;
   }
 }
 

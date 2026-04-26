@@ -128,13 +128,13 @@ function dashboardView({ user, subscribedSummaries, trending, activity, subscrib
 
 function exploreView({ user, topics, subscribedTopics }) {
   const rows = topics.map((topic) => {
-    const subscribed = subscribedTopics.includes(topic.id);
+    const subscribed = subscribedTopics.includes(topic._id.toString());
     return `<article class="panel topic-card">
       <div class="topic-chip">${topic.tags.join(' · ') || 'general'}</div>
-      <h3><a class="text-link" href="/topics/${topic.id}">${topic.name}</a></h3>
+      <h3><a class="text-link" href="/topics/${topic._id}">${topic.name}</a></h3>
       <p>${topic.description}</p>
       <div class="card-meta"><span>${topic.accessCount} visits</span></div>
-      <form method="POST" action="/topics/${topic.id}/${subscribed ? 'unsubscribe' : 'subscribe'}">
+      <form method="POST" action="/topics/${topic._id}/${subscribed ? 'unsubscribe' : 'subscribe'}">
         <button class="btn ${subscribed ? 'btn-ghost' : ''}">${subscribed ? 'Unsubscribe' : 'Subscribe'}</button>
       </form>
     </article>`;
@@ -183,11 +183,11 @@ function myTopicsView({ user, topics }) {
       <div class="section-head"><h2>My Subscriptions</h2><p>Manage subscribed communities and jump straight into discussion.</p></div>
       <div class="card-grid">
         ${topics.map((topic) => `<article class="panel topic-card">
-          <h3><a class="text-link" href="/topics/${topic.id}">${topic.name}</a></h3>
+          <h3><a class="text-link" href="/topics/${topic.topicId }">${topic.name}</a></h3>
           <p>${topic.description}</p>
           <div class="topic-actions">
-            <a class="btn btn-ghost" href="/topics/${topic.id}">Open Topic</a>
-            <form method="POST" action="/topics/${topic.id}/unsubscribe"><button class="btn btn-ghost">Unsubscribe</button></form>
+            <a class="btn btn-ghost" href="/topics/${topic.topicId}">Open Topic</a>
+            <form method="POST" action="/topics/${topic.topicId}/unsubscribe"><button class="btn btn-ghost">Unsubscribe</button></form>
           </div>
         </article>`).join('') || '<article class="panel"><p class="muted">No subscriptions yet. Visit Explore to subscribe.</p></article>'}
       </div>
@@ -206,7 +206,7 @@ function topicView({ user, topic, posts, isSubscribed }) {
         <p>${topic.description}</p>
         <div class="topic-actions">
           <span class="topic-chip">${topic || 'general'}</span>
-          <form method="POST" action="/topics/${topic.id}/${isSubscribed ? 'unsubscribe' : 'subscribe'}">
+          <form method="POST" action="/topics/${topic._id}/${isSubscribed ? 'unsubscribe' : 'subscribe'}">
             <button class="btn ${isSubscribed ? 'btn-ghost' : ''}">${isSubscribed ? 'Unsubscribe' : 'Subscribe'}</button>
           </form>
         </div>
@@ -217,7 +217,7 @@ function topicView({ user, topic, posts, isSubscribed }) {
       <article class="panel composer">
         <h2>Write a post</h2>
         <form method="POST" action="/posts">
-          <input type="hidden" name="topicId" value="${topic.id}" />
+          <input type="hidden" name="topicId" value="${topic._id}" />
           <textarea name="content" placeholder="Share your perspective..." required></textarea>
           <button class="btn" type="submit">Post to Topic</button>
         </form>
@@ -230,7 +230,19 @@ function topicView({ user, topic, posts, isSubscribed }) {
   });
 }
 
-function statsView({ user, stats }) {
+function statsView({ stats, user, totalAccessCount, totalSubscriptions, totalPosts, }) {
+
+  console.log('Rendering statsView with totalAccesscount:', totalAccessCount);
+
+  const tabelRows = stats.map((row) => `
+  <tr>
+    <td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td>
+    <td>${row.tags.map(t => `<span class="topic-chip">${t}</span>`).join(' ')}</td>
+    <td class="text-center">${row.accessCount}</td>
+    <td class="text-center">${row.numPosts}</td>
+    <td class="muted">${row.lastPostAt ? fmt(row.lastPostAt) : `<span class="subtle">-</span>`}</td>
+    </tr>`).join('')
+
   return renderLayout({
     title: 'Stats',
     user,
@@ -238,14 +250,14 @@ function statsView({ user, stats }) {
     body: `<section class="section-block">
       <div class="section-head"><h2>Topic Metrics</h2><p>Observer-updated post totals and engagement indicators.</p></div>
       <div class="stats-grid">
-        <article class="panel"><h3>Total Topics</h3><p class="stat-value">${stats.length}</p></article>
-        <article class="panel"><h3>Total Accesses</h3><p class="stat-value">${stats.reduce((sum, row) => sum + row.accessCount, 0)}</p></article>
-        <article class="panel"><h3>Total Posts</h3><p class="stat-value">${stats.reduce((sum, row) => sum + row.totalPosts, 0)}</p></article>
+        <article class="panel"><h3>Total Topics</h3><p class="stat-value">${totalSubscriptions}</p></article>
+        <article class="panel"><h3>Total Accesses</h3><p class="stat-value">${totalAccessCount}</p></article>
+        <article class="panel"><h3>Total Posts</h3><p class="stat-value">${totalPosts}</p></article>
       </div>
       <article class="panel table-wrap">
         <table>
           <thead><tr><th>Topic</th><th>Tags</th><th>Access Count</th><th>Total Posts</th><th>Last Post</th></tr></thead>
-          <tbody>${stats.map((row) => `<tr><td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td><td></td><td>${row.accessCount}</td><td>${row.totalPosts}</td><td>${row.lastPostAt ? fmt(row.lastPostAt) : '—'}</td></tr>`).join('')}</tbody>
+          <tbody>${tabelRows || `<tr><td colspan="5" class="muted">No topics tracked yet.</td></tr>`}</tbody>
         </table>
       </article>
     </section>`

@@ -14,67 +14,43 @@ async function dashboard(req, res) {
   const user = await userModel.findById(req.session.userId);
 
   if (!user) {
-    return res.redirect('/auth/login');
+    return res.redirect('/auth/login?msg=Please%20log%20in');
   }
 
-  const userId = user.id || user._id?.toString();
-
-  const subscribedIds = await subscriptionModel.listTopicIdsByUser(userId);
-
-  const subscribedTopicsRaw = await Promise.all(
-    subscribedIds.map((topicId) => topicModel.findById(topicId))
-  );
-
-  const subscribedTopics = subscribedTopicsRaw.filter(Boolean);
+  const subscribedIds = await subscriptionModel.listTopicIdsByUser(user._id);
 
   const recents = await postModel.getRecentByTopics(subscribedIds, 2);
 
-  const subscribedSummariesRaw = await Promise.all(
-    recents.map(async (r) => ({
-      topic: await topicModel.findById(r.topicId),
-      posts: r.posts || []
-    }))
-  );
+  const subscribedSummaries = await Promise.all(recents.map(async (r) => {
+    const topic = await topicModel.findById(r.topicId);
+    if (!topic) return null;
 
-  const subscribedSummaries = await Promise.all(
-    subscribedSummariesRaw
-      .filter((r) => r.topic)
-      .map(async (r) => ({
-        ...r,
-        posts: await Promise.all(
-          r.posts.map(async (p) => ({
-            ...p,
-            userName: await userModel.displayNameFor(p.userId)
-          }))
-        )
-      }))
-  );
+    const postsWithNames = await Promise.all(r.posts.map(async (p) => ({
+      ...p,
+      userName: await userModel.displayNameFor(p.userId)
+    })));
 
-  let activity = [];
+    return { topic, posts: postsWithNames };
+  }));
 
-  if (activityModel && typeof activityModel.listRecent === 'function') {
-    activity = await activityModel.listRecent(8);
-  }
-
-  activity = await Promise.all(
-    activity.map(async (entry) => ({
+  const logs = await activityModel.getActivityLog();
+  const activity = await Promise.all(logs.map(async (entry) => {
+    const topic = await topicModel.findById(entry.topicId);
+    return {
       ...entry,
       userName: await userModel.displayNameFor(entry.userId),
-      topicName: (await topicModel.findById(entry.topicId))?.name || entry.topicId
-    }))
-  );
+      topicName: topic?.name || 'General'
+    };
+  }));
 
-  const trending = await topicModel.getTrending(5);
-
-  res.html(
-    dashboardView({
-      user,
-      subscribedSummaries,
-      trending,
-      activity,
-      subscribedTopics
-    })
-  );
+  res.html(dashboardView({
+    user,
+    subscribedSummaries: subscribedSummaries.filter(Boolean), 
+    activity,
+    trending: await topicModel.getTrending(5),
+    subscribedTopics: subscribedSummaries.filter(Boolean).map(s => s.topic)
+  }));
 }
+
 
 module.exports = { landing, dashboard };
