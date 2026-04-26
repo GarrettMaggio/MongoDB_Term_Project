@@ -23,9 +23,8 @@ class DataContext {
         };
     }
 
-    static async CreateTopic(name, description) {
+    static async CreateTopic(topic) {
         const db = await getDatabase();
-        const topic = {name, description};
         const result = await db.collection('Topics').insertOne(topic);
         console.log('Inserted topic with ID:', result.insertedId);
         console.log('Topic data:', topic);
@@ -119,6 +118,11 @@ class DataContext {
       createdBy: topic.createdBy || null
     }));
   }
+
+    static async FindTopicsById(topicId) {
+        const db = await getDatabase();
+        return db.collection('Topics').find({ _id: new ObjectId(topicId) }).toArray();
+    }
 
     static async GetSubscriptions() {
         const db = await getDatabase();
