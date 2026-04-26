@@ -46,7 +46,7 @@ class DataContext {
             return null;
         }
 
-        const subscription = {name: topic.name, description: topic.description, userId: new ObjectId(userId), topicId: new ObjectId(topicId), createdAt: new Date().toISOString()};
+        const subscription = {name: topic.name, description: topic.description, tags: topic.tags, accessCount: topic.accessCount, userId: new ObjectId(userId), topicId: new ObjectId(topicId), createdAt: new Date().toISOString()};
 
         const result = await db.collection('Subscriptions').insertOne(subscription);
         console.log('Inserted subscription with ID:', result.insertedId);
@@ -60,7 +60,7 @@ class DataContext {
     static async CreateStat(type, topicId, userId) {
         const db = await getDatabase();
         const stat = { 
-            type, topicId, userId, createdAt: new Date().toISOString()
+            type, name: topic.name, description: topic.description, tags: topic.tags, accessCount: topic.accessCount, topicId, userId, createdAt: new Date().toISOString()
         };
         const result = await db.collection('Stats').insertOne(stat);
         console.log('Inserted stat with ID:', result.insertedId);
@@ -134,6 +134,11 @@ class DataContext {
         return db.collection('Subscriptions').find({ userId: new ObjectId(userId), topicId: new ObjectId(topicId) }).toArray();
     }
 
+    static async GetSubscriptionsByUserId(userId) {
+        const db = await getDatabase();
+        return db.collection('Subscriptions').find({ userId: new ObjectId(userId) }).toArray();
+    }
+
     static async DeleteSubscription(userId, topicId) {
         const db =  await getDatabase();
         const UID = new ObjectId(userId);
@@ -150,17 +155,41 @@ class DataContext {
         return await db.collection('Subscriptions').deleteOne({ _id: subscription._id  });
     }
 
+    static async GetAccessCounts() {
+    const db = await getDatabase();
+    const result = await db.collection('Topics').aggregate([
+        {
+            $group: {
+                _id: null, // Group everything into one bucket
+                total: { $sum: "$accessCount" } // Sum the accessCount field
+            }
+        }
+    ]).toArray();
+
+    console.log('Total access count:', result[0]?.total || 0);
+
+    return result[0]?.total || 0; // Return the total or 0 if no topics exist
+}
+
     static async GetStats() {
         const db = await getDatabase();
-        return db.collection('Stats').find({}).toArray();
+        return await db.collection('Stats').find({}).toArray();
     }
 
-    static async UpdateStats(type, topicId, userId) {
+    static async UpdateStats(userId, topicId) {
         const db = await getDatabase();
-        const filter = { type, topicId, userId };
-        const update = { $set: { createdAt: new Date().toISOString() } };
-        const options = { upsert: true };
-        return await db.collection('Stats').updateOne(filter, update, options).toArray();
+        const topic = await db.collection('Topics').findOne({ _id: typeof topicId === 'string' ? new ObjectId(topicId) : topicId });
+        console.log("TopicId" , topicId, "UserId", userId);
+        if (!topic) {
+            console.log('Topic not found for topicId:', topicId);
+            return null;
+        }
+        else {
+            const filter = { userId: new ObjectId(userId), topicId: new ObjectId(topicId) };
+            const update = { $set: { name: topic.name, description: topic.description, tags: topic.tags, accessCount: topic.accessCount, createdAt: new Date().toISOString() } };
+            const options = { upsert: true };
+            return await db.collection('Stats').updateOne(filter, update, options);
+        }
     }
 
     static async DeleteStat(type, topicId, userId) {
@@ -198,6 +227,7 @@ class DataContext {
         const db = await getDatabase();
         return db.collection('ActivityLog').find({}).toArray();
     }
+
     
 }
 module.exports = DataContext;

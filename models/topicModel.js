@@ -9,15 +9,26 @@ class TopicModel {
     return topics;
   }
 
+  async getTopicCount() {
+    const topics = await DataContext.GetTopics();
+    return topics.length;
+  }
+
   async getStats() {
     const stats = await DataContext.GetStats();
     return stats; 
   }
+
+  async getStatsByUser(userId) {
+    const stats = await DataContext.GetStats();
+    const userStats = stats.filter(stat => stat.userId.toString() === userId.toString());
+    return userStats;
+  }
   
-  async getTopicStats() {
+  /*async getTopicStats() {
     const topicStats = await DataContext.GetStats();
     return topicStats;
-  }
+  }*/
 
   async findById(topicId) {
     const topics = await this.getallTopics();

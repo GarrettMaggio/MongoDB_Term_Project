@@ -230,7 +230,19 @@ function topicView({ user, topic, posts, isSubscribed }) {
   });
 }
 
-function statsView({ user, stats }) {
+function statsView({ stats, user, totalAccessCount, totalSubscriptions, totalPosts, }) {
+
+  console.log('Rendering statsView with totalAccesscount:', totalAccessCount);
+
+  const tabelRows = stats.map((row) => `
+  <tr>
+    <td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td>
+    <td>${row.tags.map(t => `<span class="topic-chip">${t}</span>`).join(' ')}</td>
+    <td class="text-center">${row.accessCount}</td>
+    <td class="text-center">${row.numPosts}</td>
+    <td class="muted">${row.lastPostAt ? fmt(row.lastPostAt) : `<span class="subtle">-</span>`}</td>
+    </tr>`).join('')
+
   return renderLayout({
     title: 'Stats',
     user,
@@ -238,14 +250,14 @@ function statsView({ user, stats }) {
     body: `<section class="section-block">
       <div class="section-head"><h2>Topic Metrics</h2><p>Observer-updated post totals and engagement indicators.</p></div>
       <div class="stats-grid">
-        <article class="panel"><h3>Total Topics</h3><p class="stat-value">${stats.length}</p></article>
-        <article class="panel"><h3>Total Accesses</h3><p class="stat-value">${stats.reduce((sum, row) => sum + row.accessCount, 0)}</p></article>
-        <article class="panel"><h3>Total Posts</h3><p class="stat-value">${stats.reduce((sum, row) => sum + row.totalPosts, 0)}</p></article>
+        <article class="panel"><h3>Total Topics</h3><p class="stat-value">${totalSubscriptions}</p></article>
+        <article class="panel"><h3>Total Accesses</h3><p class="stat-value">${totalAccessCount}</p></article>
+        <article class="panel"><h3>Total Posts</h3><p class="stat-value">${totalPosts}</p></article>
       </div>
       <article class="panel table-wrap">
         <table>
           <thead><tr><th>Topic</th><th>Tags</th><th>Access Count</th><th>Total Posts</th><th>Last Post</th></tr></thead>
-          <tbody>${stats.map((row) => `<tr><td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td><td></td><td>${row.accessCount}</td><td>${row.totalPosts}</td><td>${row.lastPostAt ? fmt(row.lastPostAt) : '—'}</td></tr>`).join('')}</tbody>
+          <tbody>${tabelRows || `<tr><td colspan="5" class="muted">No topics tracked yet.</td></tr>`}</tbody>
         </table>
       </article>
     </section>`

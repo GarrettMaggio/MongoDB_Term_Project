@@ -34,12 +34,23 @@ class SubscriptionModel {
       return false;
     }*/
     await DataContext.CreateSubscription(userId, topicId);
+    await DataContext.UpdateStats(userId, topicId);
     return true;
   }
 
   async unsubscribe(userId, topicId) {
     await DataContext.DeleteSubscription(userId, topicId);
     return true;
+  }
+
+  async countTotalAccesses() {
+    const accessCounts = await DataContext.GetAccessCounts();
+    return accessCounts;
+  }
+
+  async countTotalSubscriptions(userId) {
+    const subscriptions = await DataContext.GetSubscriptionsByUserId(userId);
+    return subscriptions.length;
   }
 }
 
