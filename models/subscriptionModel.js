@@ -1,4 +1,3 @@
-const DatabaseSingleton = require('../config/databaseSingleton');
 const DataContext = require('../data/datacontext');
 
 class SubscriptionModel {
@@ -16,66 +15,52 @@ class SubscriptionModel {
 
   async getSubscriptions() {
     const subscriptions = await DataContext.GetSubscriptions();
-    return Array.isArray(subscriptions) ? subscriptions.map((s) => ({
-      ...s,
-      id: this.normalizeId(s.id || s._id),
-      userId: this.normalizeId(s.userId),
-      topicId: this.normalizeId(s.topicId)
-    })) : [];
+    return subscriptions;
   }
 
-  async listByUser(userId) {
-    const normalizedUserId = this.normalizeId(userId);
-    const subscriptions = await this.getSubscriptions();
-    return subscriptions.filter((s) => s.userId === normalizedUserId);
+  /*async listByUser(userId) {
+    return await this.getSubscriptions().filter((s) => s.userId === userId);
+  }*/
+
+  async getTopicIdsByUserId(userId) {
+    const allSubs = await DataContext.GetSubscriptions();
+    // Filter by the specific user and return just the topicId as a string
+    return allSubs
   }
 
   async listTopicIdsByUser(userId) {
-    const subscriptions = await this.listByUser(userId);
-    return subscriptions.map((s) => s.topicId);
+    const SubscriptionsById = await DataContext.FindSubscriptionsById(userId);
+    return SubscriptionsById;
   }
 
   async isSubscribed(userId, topicId) {
-    const normalizedUserId = this.normalizeId(userId);
-    const normalizedTopicId = this.normalizeId(topicId);
-    const subscriptions = await this.getSubscriptions();
-    return subscriptions.some((s) => s.userId === normalizedUserId && s.topicId === normalizedTopicId);
+    return await DataContext.FindSubscriptionsById(userId, topicId);
   }
 
   async subscribe(userId, topicId) {
-    const db = await DatabaseSingleton.getInstance();
-    const normalizedUserId = this.normalizeId(userId);
-    const normalizedTopicId = this.normalizeId(topicId);
-
-    const existing = await db.collection('Subscriptions').findOne({
-      userId: normalizedUserId,
-      topicId: normalizedTopicId
-    });
-    if (existing) {
-      return {
-        ...existing,
-        id: this.normalizeId(existing._id),
-        userId: this.normalizeId(existing.userId),
-        topicId: this.normalizeId(existing.topicId)
-      };
-    }
-
-    const newSubscription = { userId: normalizedUserId, topicId: normalizedTopicId };
-    const result = await db.collection('Subscriptions').insertOne(newSubscription);
-
-    return {
-      ...newSubscription,
-      id: this.normalizeId(result.insertedId)
-    };
+    const existing = await DataContext.FindSubscriptionsById(userId, topicId);
+    console.log("Inside subscribe from SubscriptionModel");
+    /*if (existing.length > 0) {
+      return false;
+    }*/
+    await DataContext.CreateSubscription(userId, topicId);
+    await DataContext.UpdateStats(userId, topicId);
+    return true;
   }
 
   async unsubscribe(userId, topicId) {
-    const db = await DatabaseSingleton.getInstance();
-    await db.collection('Subscriptions').deleteOne({
-      userId: this.normalizeId(userId),
-      topicId: this.normalizeId(topicId)
-    });
+    await DataContext.DeleteSubscription(userId, topicId);
     return true;
+  }
+
+  async countTotalAccesses() {
+    const accessCounts = await DataContext.GetAccessCounts();
+    return accessCounts;
+  }
+
+  async countTotalSubscriptions(userId) {
+    const subscriptions = await DataContext.GetSubscriptionsByUserId(userId);
+    return subscriptions.length;
   }
 }
 

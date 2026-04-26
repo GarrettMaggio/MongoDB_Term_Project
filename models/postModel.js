@@ -10,7 +10,7 @@ class PostModel {
   async listByTopic(topicId) {
     const posts = await DataContext.GetPosts();
     return posts
-      .filter((post) => post.topicId === topicId)
+      .filter((post) => post.topicId.toString() === topicId.toString())
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
@@ -19,20 +19,16 @@ class PostModel {
     return posts;
   }
 
-
-
   // get the two most recent topics for each topicId in the provided list
   async getRecentByTopics(topicIds, limitPerTopic = 2) {
-    if (!Array.isArray(topicIds) || topicIds.length === 0) return [];
+    const recentPosts = await DataContext.GetPostsByTopic(topicIds, limitPerTopic);
+    console.log("Recent posts for topicIds:", recentPosts);
+    return recentPosts;
+  }
 
-    const grouped = await Promise.all(
-      topicIds.map(async (topicId) => ({
-        topicId,
-        posts: await DataContext.GetPostsByTopic(topicId, limitPerTopic)
-      }))
-    );
-
-    return grouped;
+  async countTotalPosts() {
+    const posts = await DataContext.GetPosts();
+    return posts.length;
   }
 }
 

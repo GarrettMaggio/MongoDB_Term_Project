@@ -5,21 +5,34 @@ const { ObjectId } = require('mongodb');
 class TopicModel {
   async getallTopics() {
     const topics = await DataContext.GetTopics();
-    if (!Array.isArray(topics)) return [];
-    return topics.map((topic) => ({
-      ...topic,
-      id: topic.id || topic._id?.toString()
-    }));
+    return Array.isArray(topics) ? topics : [];
   }
 
-  async getAll() {
-    return this.getallTopics();
+  async getTopicCount() {
+    const topics = await DataContext.GetTopics();
+    return topics.length;
   }
 
   async getallStats() {
     const stats = await DataContext.GetStats();
     return Array.isArray(stats) ? stats : [];
   }
+
+  async getTopicCount() {
+    const topics = await DataContext.GetTopics();
+    return topics.length;
+  }
+
+  async getStats() {
+    const stats = await DataContext.GetStats();
+    const userStats = stats.filter(stat => stat.userId.toString() === userId.toString());
+    return userStats;
+  }
+  
+  /*async getTopicStats() {
+    const topicStats = await DataContext.GetStats();
+    return topicStats;
+  }*/
 
   async findById(topicId) {
     const topics = await this.getallTopics();
@@ -41,10 +54,6 @@ class TopicModel {
 
   async getTrending(limit = 6) {
     const topics = await this.getallTopics();
-    
-    if (!Array.isArray(topics)) {
-      return [];
-    }
 
     return topics
       .sort((a, b) => (b.accessCount || 0) - (a.accessCount || 0))

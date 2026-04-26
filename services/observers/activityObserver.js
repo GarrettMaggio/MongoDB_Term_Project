@@ -1,11 +1,12 @@
-const DatabaseSingleton = require('../../config/databaseSingleton');
+//const DatabaseSingleton = require('../../config/databaseSingleton');
+const DataContext = require('../../data/datacontext');
 
 class ActivityObserver {
+  
   async update(eventName, payload) {
-    if (eventName !== 'post:created') return;
-
-    const db = await DatabaseSingleton.getInstance();
-    await db.collection('ActivityLog').insertOne({
+    const activityLog = await DataContext.GetActivityLog();
+    activityLog.unshift({
+      id: `a-${Date.now()}`,
       eventName,
       topicId: payload.topicId,
       userId: payload.userId,
