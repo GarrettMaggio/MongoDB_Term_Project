@@ -61,6 +61,8 @@ async function topicPage(req, res) {
   }
   const posts = await postModel.listByTopic(topic._id);
 
+  console.log("Post", posts);
+
   res.html(topicView({
     user,
     topic,

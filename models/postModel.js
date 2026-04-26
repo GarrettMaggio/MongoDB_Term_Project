@@ -10,7 +10,7 @@ class PostModel {
   async listByTopic(topicId) {
     const posts = await DataContext.GetPosts();
     return posts
-      .filter((post) => post.topicId === topicId)
+      .filter((post) => post.topicId.toString() === topicId.toString())
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
