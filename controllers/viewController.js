@@ -51,5 +51,4 @@ async function dashboard(req, res) {
   }));
 }
 
-
 module.exports = { landing, dashboard };
