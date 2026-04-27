@@ -16,7 +16,7 @@ async function login(req, res) {
 
   const user = await userModel.findByCredentials(username, password);
   if (!user) return res.redirect('/auth/login?msg=Invalid%20credentials');
-  req.session.userId = user.id || user._id?.toString();
+  req.session.userId = user?._id?.toString?.() || user?.id?.toString?.() || null;
   return res.redirect('/dashboard');
 }
 
@@ -27,10 +27,8 @@ async function register(req, res) {
   if (!username || !password) return res.redirect('/auth/register?msg=All%20fields%20are%20required');
 
   const user = await userModel.create({ username, password, displayName });
-  console.log(user._id);
-  console.log('Created user:', user.username, 'Password:', user.password, 'DisplayName:', user.displayName);
   if (!user) return res.redirect('/auth/register?msg=Username%20already%20exists');
-  req.session.userId = user.id || user._id?.toString();
+  req.session.userId = user?._id?.toString?.() || user?.id?.toString?.() || null;
   return res.redirect('/dashboard');
 }
 

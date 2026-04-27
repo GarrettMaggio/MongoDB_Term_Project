@@ -14,23 +14,16 @@ class UserModel {
   }
 
   async create({ username, password, displayName }) {
-    const usersId = await DataContext.CreateUser(username, password, displayName);
-    if (!usersId) return null;
-    const user = {
-      _id: usersId,
-      username,
-      password,
-      displayName: username
-    };
-    return user;
+    const createdUser = await DataContext.CreateUser(username, password, displayName);
+    return createdUser || null;
   }
 
   async findById(userId) {
     return await DataContext.FindUserById(userId);
   }
 
-  toPublic(userId) {
-    const user = this.findById(userId);
+  async toPublic(userId) {
+    const user = await this.findById(userId);
     return user ? { id: user._id, username: user.username, displayName: user.displayName } : null;
   }
 

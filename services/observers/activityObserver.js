@@ -1,4 +1,3 @@
-//const DatabaseSingleton = require('../../config/databaseSingleton');
 const DataContext = require('../../data/datacontext');
 
 class ActivityObserver {

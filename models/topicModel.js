@@ -1,6 +1,4 @@
 const DataContext = require('../data/datacontext');
-const DatabaseSingleton = require('../config/databaseSingleton');
-const { ObjectId } = require('mongodb');
 
 class TopicModel {
   async getAll() {
@@ -64,19 +62,12 @@ class TopicModel {
   }
 
   async incrementAccess(topicId) {
-    const db = await DatabaseSingleton.getInstance();
-
-    await db.collection('Topics').updateOne(
-      { _id: new ObjectId(topicId) },
-      { $inc: { accessCount: 1 } }
-    );
+    await DataContext.IncrementTopicAccess(topicId);
 
     return await this.findById(topicId);
   }
 
   async create({ name, description, tags, createdBy }) {
-    const db = await DatabaseSingleton.getInstance();
-
     const newTopic = {
       name,
       description,
@@ -85,11 +76,11 @@ class TopicModel {
       accessCount: 0
     };
 
-    const result = await db.collection('Topics').insertOne(newTopic);
+    const result = await DataContext.CreateTopic(newTopic);
 
     return {
       ...newTopic,
-      id: result.insertedId.toString()
+      id: result._id.toString()
     };
   }
 }

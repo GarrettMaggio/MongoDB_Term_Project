@@ -232,9 +232,6 @@ function topicView({ user, topic, posts, isSubscribed }) {
 }
 
 function statsView({ stats, user, totalAccessCount, totalSubscriptions, totalPosts, }) {
-
-  console.log('Rendering statsView with totalAccesscount:', totalAccessCount);
-
   const tabelRows = stats.map((row) => `
   <tr>
     <td><a class="text-link" href="/topics/${row.id}">${row.name}</a></td>

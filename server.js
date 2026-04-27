@@ -7,6 +7,28 @@ const topicSubject = require('./services/observers/topicSubject');
 const ActivityObserver = require('./services/observers/activityObserver');
 const StatsObserver = require('./services/observers/statsObserver');
 
+function loadEnvFromRoot() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+  const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIndex = trimmed.indexOf('=');
+    if (eqIndex < 1) continue;
+    const key = trimmed.slice(0, eqIndex).trim();
+    let value = trimmed.slice(eqIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (!(key in process.env)) {
+      process.env[key] = value;
+    }
+  }
+}
+
+loadEnvFromRoot();
+
 
 topicSubject.attach(new ActivityObserver());
 topicSubject.attach(new StatsObserver());
@@ -98,4 +120,3 @@ const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
-

@@ -8,9 +8,6 @@ const userModel = require('../models/userModel');
 
 async function landing(req, res) {
   const trending = await topicModel.getTrending(6);
-  console.log("TRENDING =", trending);
-  console.log("IS ARRAY =", Array.isArray(trending));
-  console.log("TYPE =", typeof trending);
   res.html(landingView({ trending }));  
 }
 
@@ -24,12 +21,13 @@ async function explore(req, res) {
 
 async function myTopics(req, res) {
   const user = await userModel.findById(req.session.userId); 
-  const topics = await subscriptionModel.getSubscriptions();
+  const topics = await subscriptionModel.listByUser(req.session.userId);
   res.html(myTopicsView({ user, topics }));
 }
 
 async function createTopic(req, res) {
   const user = await userModel.findById(req.session.userId);
+  if (!user) return res.redirect('/auth/login?msg=Please%20log%20in');
   const name = (req.body.name || '').trim();
   const description = (req.body.description || '').trim();
   const tags = (req.body.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
@@ -43,7 +41,6 @@ async function createTopic(req, res) {
 }
 
 async function subscribe(req, res) {
-  console.log("Inside subscribe from topicController");
   if (await topicModel.findById(req.params.topicId)) {
     await subscriptionModel.subscribe(req.session.userId, req.params.topicId);
   }
@@ -63,8 +60,6 @@ async function topicPage(req, res) {
     return res.status(404).text('Topic not found');
   }
   const posts = await postModel.listByTopic(topic._id);
-
-  console.log("Post", posts);
 
   res.html(topicView({
     user,

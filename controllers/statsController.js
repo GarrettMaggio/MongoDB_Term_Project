@@ -2,7 +2,6 @@ const postModel = require('../models/postModel');
 const subscriptionModel = require('../models/subscriptionModel');
 const topicModel = require('../models/topicModel');
 const userModel = require('../models/userModel');
-const DatabaseSingleton = require('../config/databaseSingleton');
 const { statsView } = require('../views/pages');
 
 async function statsPage(req, res) {
@@ -21,9 +20,7 @@ async function statsPage(req, res) {
     };
   });
   const totalAccessCount = await subscriptionModel.countTotalAccesses();
-  
-  console.log('total accesses count in statsController:', totalAccessCount);
-  
+
   res.html(statsView({ 
     stats,
     user, 

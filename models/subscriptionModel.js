@@ -18,16 +18,13 @@ class SubscriptionModel {
     return subscriptions;
   }
 
-  /*async listByUser(userId) {
-    return await this.getSubscriptions().filter((s) => s.userId === userId);
-  }*/
+  async listByUser(userId) {
+    return await DataContext.GetSubscriptionsByUserId(userId);
+  }
 
   async getTopicIdsByUserId(userId) {
-    const allSubs = await DataContext.GetSubscriptions();
-    const normalizedUserId = this.normalizeId(userId);
-    return allSubs
-      .filter((s) => this.normalizeId(s.userId) === normalizedUserId)
-      .map((s) => this.normalizeId(s.topicId));
+    const userSubs = await DataContext.GetSubscriptionsByUserId(userId);
+    return userSubs.map((s) => this.normalizeId(s.topicId));
   }
 
   async listTopicIdsByUser(userId) {
@@ -36,15 +33,15 @@ class SubscriptionModel {
   }
 
   async isSubscribed(userId, topicId) {
-    return await DataContext.FindSubscriptionsById(userId, topicId);
+    const found = await DataContext.FindSubscriptionsById(userId, topicId);
+    return Array.isArray(found) && found.length > 0;
   }
 
   async subscribe(userId, topicId) {
     const existing = await DataContext.FindSubscriptionsById(userId, topicId);
-    console.log("Inside subscribe from SubscriptionModel");
-    /*if (existing.length > 0) {
+    if (existing.length > 0) {
       return false;
-    }*/
+    }
     await DataContext.CreateSubscription(userId, topicId);
     await DataContext.UpdateStats(userId, topicId);
     return true;
