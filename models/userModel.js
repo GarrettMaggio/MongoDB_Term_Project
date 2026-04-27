@@ -34,8 +34,9 @@ class UserModel {
     return user ? { id: user._id, username: user.username, displayName: user.displayName } : null;
   }
 
-  displayNameFor(userId) {
-    return this.findById(userId)?.displayName || 'Unknown User';
+  async displayNameFor(userId) {
+    const user = await this.findById(userId);
+    return user?.displayName || 'Unknown User';
   }
 }
 

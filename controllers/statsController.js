@@ -7,7 +7,19 @@ const { statsView } = require('../views/pages');
 
 async function statsPage(req, res) {
   const user = await userModel.findById(req.session.userId); 
-  const stats = await topicModel.getallTopics(); 
+  const [topics, statRows] = await Promise.all([
+    topicModel.getallTopics(),
+    topicModel.getStats()
+  ]);
+  const topicPostStats = statRows.filter((row) => row.type === 'topic-posts');
+  const stats = topics.map((topic) => {
+    const matching = topicPostStats.find((row) => row.topicId?.toString() === topic.id);
+    return {
+      ...topic,
+      numPosts: matching?.numPosts || 0,
+      lastPostAt: matching?.lastPostAt || null
+    };
+  });
   const totalAccessCount = await subscriptionModel.countTotalAccesses();
   
   console.log('total accesses count in statsController:', totalAccessCount);

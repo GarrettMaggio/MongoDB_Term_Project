@@ -16,9 +16,10 @@ async function landing(req, res) {
 
 async function explore(req, res) {
   const user = await userModel.findById(req.session.userId);
-  const topics = await topicModel.getallTopics(); 
+  const q = (req.query.q || '').trim();
+  const topics = q ? await topicModel.search(q) : await topicModel.getallTopics();
   const subscribedTopics = await subscriptionModel.getTopicIdsByUserId(req.session.userId);
-  res.html(exploreView({ user, topics, subscribedTopics }));
+  res.html(exploreView({ user, topics, subscribedTopics, query: q }));
 }
 
 async function myTopics(req, res) {
@@ -36,8 +37,9 @@ async function createTopic(req, res) {
   if (!name || !description) return res.redirect('/topics/explore?q=');
 
   const topic = await topicModel.create({ name, description, tags, createdBy: user._id });
-  await subscriptionModel.subscribe(user._id, topic._id);
-  res.redirect(`/topics/${topic._id}`);
+  const topicId = topic.id || topic._id?.toString();
+  await subscriptionModel.subscribe(user._id, topicId);
+  res.redirect(`/topics/${topicId}`);
 }
 
 async function subscribe(req, res) {

@@ -18,11 +18,10 @@ async function dashboard(req, res) {
   }
 
   const subscribedIds = await subscriptionModel.listTopicIdsByUser(user._id);
-
   const recents = await postModel.getRecentByTopics(subscribedIds, 2);
 
   const subscribedSummaries = await Promise.all(recents.map(async (r) => {
-    const topic = await topicModel.findById(r.topicId);
+    const topic = await topicModel.findById(r.topicId?.toString?.() || r.topicId);
     if (!topic) return null;
 
     const postsWithNames = await Promise.all(r.posts.map(async (p) => ({

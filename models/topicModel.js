@@ -3,6 +3,10 @@ const DatabaseSingleton = require('../config/databaseSingleton');
 const { ObjectId } = require('mongodb');
 
 class TopicModel {
+  async getAll() {
+    return this.getallTopics();
+  }
+
   async getallTopics() {
     const topics = await DataContext.GetTopics();
     return Array.isArray(topics) ? topics : [];
@@ -25,8 +29,7 @@ class TopicModel {
 
   async getStats() {
     const stats = await DataContext.GetStats();
-    const userStats = stats.filter(stat => stat.userId.toString() === userId.toString());
-    return userStats;
+    return Array.isArray(stats) ? stats : [];
   }
   
   /*async getTopicStats() {

@@ -84,7 +84,7 @@ class DataContext {
 
     static async CreateActivityLog(userId, action, topicId) {
         const db = await getDatabase();
-        const logEntry = { userId, action, topicId, timestamp: new Date().toISOString() };
+        const logEntry = { userId, action, topicId, createdAt: new Date().toISOString() };
         const result = await db.collection('ActivityLog').insertOne(logEntry);
         console.log('Inserted activity log with ID:', result.insertedId);
         console.log('Activity log data:', logEntry);
@@ -101,7 +101,8 @@ class DataContext {
 
     static async FindUserById(userId) {
         const db = await getDatabase();
-        return await db.collection('Users').findOne({ _id: userId });
+        const normalizedId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+        return await db.collection('Users').findOne({ _id: normalizedId });
     }
 
   static async GetTopics() {
@@ -180,6 +181,29 @@ class DataContext {
     static async GetStats() {
         const db = await getDatabase();
         return await db.collection('Stats').find({}).toArray();
+    }
+
+    static async IncrementTopicPostStats(topicId, createdAt = new Date().toISOString()) {
+        const db = await getDatabase();
+        const normalizedTopicId = typeof topicId === 'string' ? new ObjectId(topicId) : topicId;
+        const topic = await db.collection('Topics').findOne({ _id: normalizedTopicId });
+        if (!topic) return null;
+
+        return await db.collection('Stats').updateOne(
+            { type: 'topic-posts', topicId: normalizedTopicId },
+            {
+                $set: {
+                    type: 'topic-posts',
+                    topicId: normalizedTopicId,
+                    name: topic.name,
+                    description: topic.description,
+                    tags: topic.tags || [],
+                    lastPostAt: createdAt
+                },
+                $inc: { numPosts: 1 }
+            },
+            { upsert: true }
+        );
     }
 
     static async UpdateStats(userId, topicId) {

@@ -24,13 +24,15 @@ class SubscriptionModel {
 
   async getTopicIdsByUserId(userId) {
     const allSubs = await DataContext.GetSubscriptions();
-    // Filter by the specific user and return just the topicId as a string
+    const normalizedUserId = this.normalizeId(userId);
     return allSubs
+      .filter((s) => this.normalizeId(s.userId) === normalizedUserId)
+      .map((s) => this.normalizeId(s.topicId));
   }
 
   async listTopicIdsByUser(userId) {
-    const SubscriptionsById = await DataContext.FindSubscriptionsById(userId);
-    return SubscriptionsById;
+    const subscriptionsById = await DataContext.FindSubscriptionsById(userId);
+    return subscriptionsById.map((s) => this.normalizeId(s.topicId));
   }
 
   async isSubscribed(userId, topicId) {

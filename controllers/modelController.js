@@ -9,10 +9,10 @@ async function topicStatsApi(req, res) {
   ]);
 
   const data = topics.map((topic) => {
-    const tracked = topicStats.find((row) => row.topicId === topic.id) || { totalPosts: 0, lastPostAt: null };
+    const tracked = topicStats.find((row) => row.topicId?.toString() === topic.id && row.type === 'topic-posts') || { numPosts: 0, lastPostAt: null };
     return {
       ...topic,
-      postCount: tracked.totalPosts,
+      postCount: tracked.numPosts,
       lastPostAt: tracked.lastPostAt
     };
   });

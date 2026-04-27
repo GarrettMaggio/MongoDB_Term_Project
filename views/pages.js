@@ -120,21 +120,22 @@ function dashboardView({ user, subscribedSummaries, trending, activity, subscrib
         <h3>Trending</h3>
         ${trending.map((topic) => `<a class="trend-row" href="/topics/${topic.id}"><span>${topic.name}</span><small>${topic.accessCount} visits</small></a>`).join('')}
         <h3>Recent Activity</h3>
-        ${activity.length ? activity.map((item) => `<div class="activity-row"><p><strong>${item.userName}</strong> posted in <strong>${item.topicName}</strong></p><small>${fmt(item.createdAt)}</small></div>`).join('') : '<p class="muted">No activity logged yet.</p>'}
+        ${activity.length ? activity.map((item) => `<div class="activity-row"><p><strong>${item.userName}</strong> posted in <strong>${item.topicName}</strong></p><small>${fmt(item.createdAt || item.timestamp)}</small></div>`).join('') : '<p class="muted">No activity logged yet.</p>'}
       </aside>
     </section>`
   });
 }
 
-function exploreView({ user, topics, subscribedTopics }) {
+function exploreView({ user, topics, subscribedTopics, query = '' }) {
   const rows = topics.map((topic) => {
-    const subscribed = subscribedTopics.includes(topic._id.toString());
+    const topicId = topic._id?.toString() || topic.id;
+    const subscribed = subscribedTopics.includes(topicId);
     return `<article class="panel topic-card">
       <div class="topic-chip">${topic.tags.join(' · ') || 'general'}</div>
-      <h3><a class="text-link" href="/topics/${topic._id}">${topic.name}</a></h3>
+      <h3><a class="text-link" href="/topics/${topicId}">${topic.name}</a></h3>
       <p>${topic.description}</p>
       <div class="card-meta"><span>${topic.accessCount} visits</span></div>
-      <form method="POST" action="/topics/${topic._id}/${subscribed ? 'unsubscribe' : 'subscribe'}">
+      <form method="POST" action="/topics/${topicId}/${subscribed ? 'unsubscribe' : 'subscribe'}">
         <button class="btn ${subscribed ? 'btn-ghost' : ''}">${subscribed ? 'Unsubscribe' : 'Subscribe'}</button>
       </form>
     </article>`;
@@ -151,7 +152,7 @@ function exploreView({ user, topics, subscribedTopics }) {
         <p>Browse and subscribe to topics to customize your dashboard feed.</p>
       </div>
       <form class="search-row" method="GET">
-        <input name="q" value="${topics}" placeholder="Search by name, description, or tag" />
+        <input name="q" value="${query}" placeholder="Search by name, description, or tag" />
         <button class="btn" type="submit">Search</button>
       </form>
       <div class="card-grid">${rows || '<article class="panel"><p class="muted">No topics found.</p></article>'}</div>
@@ -205,7 +206,7 @@ function topicView({ user, topic, posts, isSubscribed }) {
         <h1>${topic.name}</h1>
         <p>${topic.description}</p>
         <div class="topic-actions">
-          <span class="topic-chip">${topic || 'general'}</span>
+          <span class="topic-chip">${(topic.tags || []).join(' · ') || 'general'}</span>
           <form method="POST" action="/topics/${topic._id}/${isSubscribed ? 'unsubscribe' : 'subscribe'}">
             <button class="btn ${isSubscribed ? 'btn-ghost' : ''}">${isSubscribed ? 'Unsubscribe' : 'Subscribe'}</button>
           </form>
@@ -265,4 +266,3 @@ function statsView({ stats, user, totalAccessCount, totalSubscriptions, totalPos
 }
 
 module.exports = { landingView, authView, dashboardView, exploreView, myTopicsView, topicView, statsView };
-
